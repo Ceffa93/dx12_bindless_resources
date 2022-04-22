@@ -1,14 +1,3 @@
-//*********************************************************
-//
-// Copyright (c) Microsoft. All rights reserved.
-// This code is licensed under the MIT License (MIT).
-// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
-// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
-// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
-//
-//*********************************************************
-
 #pragma once
 #include "DescriptorManager.h"
 #include <External/DXSample.h>
@@ -62,7 +51,6 @@ private:
     ComPtr<ID3D12Fence> m_fence;
     UINT64 m_fenceValue;
 
-    void LoadPipeline();
     void LoadAssets();
     void PopulateCommandList();
     void WaitForPreviousFrame();

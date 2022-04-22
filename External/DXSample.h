@@ -14,6 +14,11 @@
 #include "Win32Application.h"
 #include <dxgi1_6.h>
 
+void GetHardwareAdapter(
+    _In_ IDXGIFactory1* pFactory,
+    _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter,
+    bool requestHighPerformanceAdapter = false);
+
 class DXSample
 {
 public:
@@ -39,12 +44,7 @@ public:
 protected:
     std::wstring GetAssetFullPath(LPCWSTR assetName);
 
-    void GetHardwareAdapter(
-        _In_ IDXGIFactory1* pFactory,
-        _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter,
-        bool requestHighPerformanceAdapter = false);
-
-    void SetCustomWindowText(LPCWSTR text);
+     void SetCustomWindowText(LPCWSTR text);
 
     // Viewport dimensions.
     UINT m_width;

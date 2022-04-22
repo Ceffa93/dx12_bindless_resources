@@ -11,37 +11,11 @@
 
 #include "DXSample.h"
 
-using namespace Microsoft::WRL;
-
-DXSample::DXSample(UINT width, UINT height, std::wstring name) :
-    m_width(width),
-    m_height(height),
-    m_title(name),
-    m_useWarpDevice(false)
-{
-    WCHAR assetsPath[512];
-    GetAssetsPath(assetsPath, _countof(assetsPath));
-    m_assetsPath = assetsPath;
-
-    m_aspectRatio = static_cast<float>(width) / static_cast<float>(height);
-}
-
-DXSample::~DXSample()
-{
-}
-
-// Helper function for resolving the full path of assets.
-std::wstring DXSample::GetAssetFullPath(LPCWSTR assetName)
-{
-    return m_assetsPath + assetName;
-}
-
 // Helper function for acquiring the first available hardware adapter that supports Direct3D 12.
 // If no such adapter can be found, *ppAdapter will be set to nullptr.
-_Use_decl_annotations_
-void DXSample::GetHardwareAdapter(
-    IDXGIFactory1* pFactory,
-    IDXGIAdapter1** ppAdapter,
+void GetHardwareAdapter(
+    _In_ IDXGIFactory1* pFactory,
+    _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter,
     bool requestHighPerformanceAdapter)
 {
     *ppAdapter = nullptr;
@@ -78,7 +52,7 @@ void DXSample::GetHardwareAdapter(
         }
     }
 
-    if(adapter.Get() == nullptr)
+    if (adapter.Get() == nullptr)
     {
         for (UINT adapterIndex = 0; SUCCEEDED(pFactory->EnumAdapters1(adapterIndex, &adapter)); ++adapterIndex)
         {
@@ -100,8 +74,33 @@ void DXSample::GetHardwareAdapter(
             }
         }
     }
-    
+
     *ppAdapter = adapter.Detach();
+}
+
+using namespace Microsoft::WRL;
+
+DXSample::DXSample(UINT width, UINT height, std::wstring name) :
+    m_width(width),
+    m_height(height),
+    m_title(name),
+    m_useWarpDevice(false)
+{
+    WCHAR assetsPath[512];
+    GetAssetsPath(assetsPath, _countof(assetsPath));
+    m_assetsPath = assetsPath;
+
+    m_aspectRatio = static_cast<float>(width) / static_cast<float>(height);
+}
+
+DXSample::~DXSample()
+{
+}
+
+// Helper function for resolving the full path of assets.
+std::wstring DXSample::GetAssetFullPath(LPCWSTR assetName)
+{
+    return m_assetsPath + assetName;
 }
 
 // Helper function for setting the window's title text.

@@ -1,17 +1,109 @@
-//*********************************************************
-//
-// Copyright (c) Microsoft. All rights reserved.
-// This code is licensed under the MIT License (MIT).
-// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
-// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
-// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
-//
-//*********************************************************
-
 #include "BindlessSample.h"
 #include <D3Dcompiler.h>
 
+namespace
+{
+    void EnableDebugLayer(UINT& factoryFlags)
+    {
+        // Requires the Graphics Tools "optional feature".
+        ComPtr<ID3D12Debug> debugController;
+        if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+        {
+            debugController->EnableDebugLayer();
+            factoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+        }
+    }
+
+    ComPtr<IDXGIFactory4> CreateFactory(UINT factoryFlags)
+    {
+        ComPtr<IDXGIFactory4> factory;
+        ThrowIfFailed(CreateDXGIFactory2(factoryFlags, IID_PPV_ARGS(&factory)));
+        ThrowIfFailed(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
+        return factory;
+    }
+
+    ComPtr<ID3D12Device> CreateDevice(IDXGIFactory4* factory)
+    {
+        ComPtr<ID3D12Device> device;
+
+        ComPtr<IDXGIAdapter1> hardwareAdapter;
+        GetHardwareAdapter(factory, &hardwareAdapter);
+
+        ThrowIfFailed(D3D12CreateDevice(
+            hardwareAdapter.Get(),
+            D3D_FEATURE_LEVEL_11_0,
+            IID_PPV_ARGS(&device)
+        ));
+        return device;
+    }
+
+    ComPtr<ID3D12CommandQueue> CreateCommandQueue(ID3D12Device* device)
+    {
+        D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+        queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+        queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+
+        ComPtr<ID3D12CommandQueue> commandQueue;
+        ThrowIfFailed(device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue)));
+        return commandQueue;
+    }
+
+    ComPtr<IDXGISwapChain3> CreateSwapChain(UINT frameCount, UINT width, UINT height, ID3D12CommandQueue* queue, IDXGIFactory4* factory)
+    {
+        DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+        swapChainDesc.BufferCount = frameCount;
+        swapChainDesc.Width = width;
+        swapChainDesc.Height = height;
+        swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+        swapChainDesc.SampleDesc.Count = 1;
+
+        ComPtr<IDXGISwapChain1> swapChain;
+        ThrowIfFailed(factory->CreateSwapChainForHwnd(
+            queue,
+            Win32Application::GetHwnd(),
+            &swapChainDesc,
+            nullptr,
+            nullptr,
+            &swapChain
+        ));
+        ComPtr<IDXGISwapChain3> swapChain3;
+        ThrowIfFailed(swapChain.As(&swapChain3));
+        return swapChain3;
+    }
+
+    ComPtr<ID3D12CommandAllocator> CreateCommandAllocator(ID3D12Device* device)
+    {
+        ComPtr<ID3D12CommandAllocator> commandAllocator;
+        ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)));
+        return commandAllocator;
+    }
+
+    ComPtr<ID3D12DescriptorHeap> CreateRtvHeap(UINT frameCount, ID3D12Device* device)
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+        rtvHeapDesc.NumDescriptors = frameCount;
+        rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+        rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+        ComPtr<ID3D12DescriptorHeap> rtvHeap;
+        ThrowIfFailed(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)));
+        return rtvHeap;
+    }
+
+    ComPtr<ID3D12Resource> CreateRtv(LONG index, ID3D12DescriptorHeap* rtvHeap, LONG rtvDescriptorSize, ID3D12Device* device, IDXGISwapChain3* swapChain)
+    {
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
+        rtvHandle.Offset(index, rtvDescriptorSize);
+
+        ComPtr<ID3D12Resource> renderTarget;
+        ThrowIfFailed(swapChain->GetBuffer(index, IID_PPV_ARGS(&renderTarget)));
+        device->CreateRenderTargetView(renderTarget.Get(), nullptr, rtvHandle);
+        return renderTarget;
+    }
+
+}
 BindlessSample::BindlessSample(UINT width, UINT height, std::wstring name) :
     DXSample(width, height, name),
     m_frameIndex(0),
@@ -23,128 +115,31 @@ BindlessSample::BindlessSample(UINT width, UINT height, std::wstring name) :
 
 void BindlessSample::OnInit()
 {
-    LoadPipeline();
-    LoadAssets();
-}
-
-// Load the rendering pipeline dependencies.
-void BindlessSample::LoadPipeline()
-{
-    UINT dxgiFactoryFlags = 0;
+    UINT factoryFlags = 0;
 
 #if defined(_DEBUG)
-    // Enable the debug layer (requires the Graphics Tools "optional feature").
-    // NOTE: Enabling the debug layer after device creation will invalidate the active device.
-    {
-        ComPtr<ID3D12Debug> debugController;
-        if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
-        {
-            debugController->EnableDebugLayer();
-
-            // Enable additional debug layers.
-            dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
-        }
-    }
+    EnableDebugLayer(factoryFlags);
 #endif
 
-    ComPtr<IDXGIFactory4> factory;
-    ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory)));
-
-    if (m_useWarpDevice)
-    {
-        ComPtr<IDXGIAdapter> warpAdapter;
-        ThrowIfFailed(factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
-
-        ThrowIfFailed(D3D12CreateDevice(
-            warpAdapter.Get(),
-            D3D_FEATURE_LEVEL_11_0,
-            IID_PPV_ARGS(&m_device)
-            ));
-    }
-    else
-    {
-        ComPtr<IDXGIAdapter1> hardwareAdapter;
-        GetHardwareAdapter(factory.Get(), &hardwareAdapter);
-
-        ThrowIfFailed(D3D12CreateDevice(
-            hardwareAdapter.Get(),
-            D3D_FEATURE_LEVEL_11_0,
-            IID_PPV_ARGS(&m_device)
-            ));
-    }
+    auto factory = CreateFactory(factoryFlags);
+    m_device = CreateDevice(factory.Get());
+    m_commandQueue = CreateCommandQueue(m_device.Get());
+    m_swapChain = CreateSwapChain(FrameCount, m_width, m_height, m_commandQueue.Get(), factory.Get());
+    m_commandAllocator = CreateCommandAllocator(m_device.Get());
+    m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    m_rtvHeap = CreateRtvHeap(FrameCount, m_device.Get());
+    m_renderTargets[0] = CreateRtv(0, m_rtvHeap.Get(), m_rtvDescriptorSize, m_device.Get(), m_swapChain.Get());
+    m_renderTargets[1] = CreateRtv(1, m_rtvHeap.Get(), m_rtvDescriptorSize, m_device.Get(), m_swapChain.Get());
 
     m_descriptorManager.init(m_device.Get());
 
-    // Describe and create the command queue.
-    D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-    queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-    queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-
-    ThrowIfFailed(m_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue)));
-
-    // Describe and create the swap chain.
-    DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-    swapChainDesc.BufferCount = FrameCount;
-    swapChainDesc.Width = m_width;
-    swapChainDesc.Height = m_height;
-    swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-    swapChainDesc.SampleDesc.Count = 1;
-
-    ComPtr<IDXGISwapChain1> swapChain;
-    ThrowIfFailed(factory->CreateSwapChainForHwnd(
-        m_commandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
-        Win32Application::GetHwnd(),
-        &swapChainDesc,
-        nullptr,
-        nullptr,
-        &swapChain
-        ));
-
-    // This sample does not support fullscreen transitions.
-    ThrowIfFailed(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
-
-    ThrowIfFailed(swapChain.As(&m_swapChain));
     m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
-    // Create descriptor heaps.
-    {
-        // Describe and create a render target view (RTV) descriptor heap.
-        D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-        rtvHeapDesc.NumDescriptors = FrameCount;
-        rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-        rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-        ThrowIfFailed(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
-
-        m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    }
-
-    // Create frame resources.
-    {
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
-
-        // Create a RTV for each frame.
-        for (UINT n = 0; n < FrameCount; n++)
-        {
-            ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
-            m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
-            rtvHandle.Offset(1, m_rtvDescriptorSize);
-        }
-    }
-
-    ThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
+    LoadAssets();
 }
 
-// Load the sample assets.
 void BindlessSample::LoadAssets()
 {
-#if defined(_DEBUG)
-    UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#else
-    UINT compileFlags = 0;
-#endif
-
     {
         UINT8* shaderData;
         UINT shaderDataLength;
