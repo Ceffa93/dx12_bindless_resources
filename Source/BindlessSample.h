@@ -13,7 +13,7 @@ using Microsoft::WRL::ComPtr;
 class BindlessSample
 {
 public:
-    BindlessSample(HINSTANCE hInstance, UINT width, UINT height, int nCmdShow);
+    BindlessSample(HINSTANCE hInstance, int nCmdShow);
     ~BindlessSample();
 
     void OnUpdate();
@@ -24,9 +24,9 @@ private:
     static const UINT TextureWidth = 8;
     static const UINT TextureHeight = 8;
     static const UINT TextureDepth = 2;
+    static const UINT WindowWidth = 720;
+    static const UINT WindowHeight = 360;
 
-    UINT m_width;
-    UINT m_height;
     std::wstring m_assetPath;
     HWND m_hwnd;
     CD3DX12_VIEWPORT m_viewport;
@@ -41,23 +41,17 @@ private:
     ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
     DescriptorManager m_descriptorManager;
     UINT m_frameIndex;
-
-
-    // Pipeline objects.
     ComPtr<ID3D12PipelineState> m_graphicPipelineState;
     ComPtr<ID3D12PipelineState> m_computePipelineState;
     ComPtr<ID3D12GraphicsCommandList> m_commandList;
-
-    // App resources.
-    std::array<ComPtr<ID3D12Resource>,2> m_2DTextures;
-    std::array<ComPtr<ID3D12Resource>,2> m_3DTextures;
+    ComPtr<ID3D12Resource> m_2DTexture;
+    ComPtr<ID3D12Resource> m_3DTexture;
 
     // Synchronization objects.
     HANDLE m_fenceEvent;
     ComPtr<ID3D12Fence> m_fence;
     UINT64 m_fenceValue;
 
-    void LoadAssets();
     void PopulateCommandList();
     void WaitForPreviousFrame();
 };
