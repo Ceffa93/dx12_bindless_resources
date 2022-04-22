@@ -1,8 +1,66 @@
 #include "BindlessSample.h"
+#include <External/DXSampleHelper.h>
 #include <D3Dcompiler.h>
 
 namespace
 {
+    void GetHardwareAdapter(
+        _In_ IDXGIFactory1* pFactory,
+        _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter)
+    {
+        *ppAdapter = nullptr;
+        ComPtr<IDXGIAdapter1> adapter;
+        ComPtr<IDXGIFactory6> factory6;
+        if (SUCCEEDED(pFactory->QueryInterface(IID_PPV_ARGS(&factory6))))
+        {
+            for (
+                UINT adapterIndex = 0;
+                SUCCEEDED(factory6->EnumAdapterByGpuPreference(
+                    adapterIndex,
+                    DXGI_GPU_PREFERENCE_UNSPECIFIED,
+                    IID_PPV_ARGS(&adapter)));
+                ++adapterIndex)
+            {
+                DXGI_ADAPTER_DESC1 desc;
+                adapter->GetDesc1(&desc);
+                if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+                {
+                    // Don't select the Basic Render Driver adapter.
+                    // If you want a software adapter, pass in "/warp" on the command line.
+                    continue;
+                }
+                // Check to see whether the adapter supports Direct3D 12, but don't create the
+                // actual device yet.
+                if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr)))
+                {
+                    break;
+                }
+            }
+        }
+        if (adapter.Get() == nullptr)
+        {
+            for (UINT adapterIndex = 0; SUCCEEDED(pFactory->EnumAdapters1(adapterIndex, &adapter)); ++adapterIndex)
+            {
+                DXGI_ADAPTER_DESC1 desc;
+                adapter->GetDesc1(&desc);
+                if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+                {
+                    // Don't select the Basic Render Driver adapter.
+                    // If you want a software adapter, pass in "/warp" on the command line.
+                    continue;
+                }
+                // Check to see whether the adapter supports Direct3D 12, but don't create the
+            // actual device yet.
+                if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr)))
+                {
+                    break;
+                }
+            }
+        }
+        *ppAdapter = adapter.Detach();
+    }
+
+
     LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         BindlessSample* pSample = reinterpret_cast<BindlessSample*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
@@ -16,20 +74,6 @@ namespace
             SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
         }
         return 0;
-
-        case WM_KEYDOWN:
-            if (pSample)
-            {
-                pSample->OnKeyDown(static_cast<UINT8>(wParam));
-            }
-            return 0;
-
-        case WM_KEYUP:
-            if (pSample)
-            {
-                pSample->OnKeyUp(static_cast<UINT8>(wParam));
-            }
-            return 0;
 
         case WM_PAINT:
             if (pSample)
@@ -64,7 +108,7 @@ namespace
 
         HWND hwnd = CreateWindow(
             windowClass.lpszClassName,
-            pSample->GetTitle(),
+            L"Bindless",
             WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT,
             CW_USEDEFAULT,
@@ -78,15 +122,11 @@ namespace
         return hwnd;
     }
 
-    void EnableDebugLayer(UINT& factoryFlags)
+    std::wstring CreateAssetPath()
     {
-        // Requires the Graphics Tools "optional feature".
-        ComPtr<ID3D12Debug> debugController;
-        if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
-        {
-            debugController->EnableDebugLayer();
-            factoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
-        }
+        WCHAR assetsPath[512];
+        GetAssetsPath(assetsPath, _countof(assetsPath));
+        return assetsPath;
     }
 
     ComPtr<IDXGIFactory4> CreateFactory(HWND hwnd)
@@ -94,7 +134,12 @@ namespace
         UINT factoryFlags = 0;
 
 #if defined(_DEBUG)
-        EnableDebugLayer(factoryFlags);
+        ComPtr<ID3D12Debug> debugController;
+        if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+        {
+            debugController->EnableDebugLayer();
+            factoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+        }
 #endif
         ComPtr<IDXGIFactory4> factory;
         ThrowIfFailed(CreateDXGIFactory2(factoryFlags, IID_PPV_ARGS(&factory)));
@@ -184,8 +229,10 @@ namespace
     }
 
 }
-BindlessSample::BindlessSample(HINSTANCE hInstance, UINT width, UINT height, std::wstring name, int nCmdShow)
-    : DXSample(width, height, name)
+BindlessSample::BindlessSample(HINSTANCE hInstance, UINT width, UINT height, int nCmdShow)
+    : m_width(width)
+    , m_height(height)
+    , m_assetPath(CreateAssetPath())
     , m_hwnd(CreateWindowHandle(hInstance, width, height, this))
     , m_viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height))
     , m_scissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height))
@@ -230,7 +277,7 @@ void BindlessSample::LoadAssets()
     {
         UINT8* shaderData;
         UINT shaderDataLength;
-        ThrowIfFailed(ReadDataFromFile(GetAssetFullPath(L"cs.cso").c_str(), &shaderData, &shaderDataLength));
+        ThrowIfFailed(ReadDataFromFile((m_assetPath + L"cs.cso").c_str(), &shaderData, &shaderDataLength));
 
         // Describe and create the graphics pipeline state object (PSO).
         D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
@@ -248,8 +295,8 @@ void BindlessSample::LoadAssets()
         UINT vertexShaderDataLength;
         UINT pixelShaderDataLength;
 
-        ThrowIfFailed(ReadDataFromFile(GetAssetFullPath(L"vs.cso").c_str(), &pVertexShaderData, &vertexShaderDataLength));
-        ThrowIfFailed(ReadDataFromFile(GetAssetFullPath(L"ps.cso").c_str(), &pPixelShaderData, &pixelShaderDataLength));
+        ThrowIfFailed(ReadDataFromFile((m_assetPath + L"vs.cso").c_str(), &pVertexShaderData, &vertexShaderDataLength));
+        ThrowIfFailed(ReadDataFromFile((m_assetPath + L"ps.cso").c_str(), &pPixelShaderData, &pixelShaderDataLength));
 
         // Describe and create the graphics pipeline state object (PSO).
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};

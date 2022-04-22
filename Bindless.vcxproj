@@ -116,14 +116,12 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="External\DXSample.cpp" />
     <ClCompile Include="Source\BindlessSample.cpp" />
     <ClCompile Include="Source\DescriptorManager.cpp" />
     <ClCompile Include="Source\Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\d3dx12.h" />
-    <ClInclude Include="External\DXSample.h" />
     <ClInclude Include="External\DXSampleHelper.h" />
     <ClInclude Include="Source\BindlessSample.h" />
     <ClInclude Include="Source\DescriptorManager.h" />

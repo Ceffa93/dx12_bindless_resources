@@ -1,22 +1,23 @@
 #pragma once
 #include "DescriptorManager.h"
-#include <External/DXSample.h>
 #include <External/d3dx12.h>
-#include <array>
 #include <DirectXMath.h>
+#include <d3d12.h>
+#include <dxgi1_6.h>
+#include <array>
 
 using namespace DirectX;
 
 using Microsoft::WRL::ComPtr;
 
-class BindlessSample : public DXSample
+class BindlessSample
 {
 public:
-    BindlessSample(HINSTANCE hInstance, UINT width, UINT height, std::wstring name, int nCmdShow);
+    BindlessSample(HINSTANCE hInstance, UINT width, UINT height, int nCmdShow);
     ~BindlessSample();
 
-    virtual void OnUpdate();
-    virtual void OnRender();
+    void OnUpdate();
+    void OnRender();
 
 private:
     static const UINT FrameCount = 2;
@@ -24,6 +25,9 @@ private:
     static const UINT TextureHeight = 8;
     static const UINT TextureDepth = 2;
 
+    UINT m_width;
+    UINT m_height;
+    std::wstring m_assetPath;
     HWND m_hwnd;
     CD3DX12_VIEWPORT m_viewport;
     CD3DX12_RECT m_scissorRect;

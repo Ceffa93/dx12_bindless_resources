@@ -21,9 +21,6 @@
     <ClCompile Include="Source\Main.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="External\DXSample.cpp">
-      <Filter>External</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\BindlessSample.h">
@@ -36,9 +33,6 @@
       <Filter>Shaders</Filter>
     </ClInclude>
     <ClInclude Include="External\d3dx12.h">
-      <Filter>External</Filter>
-    </ClInclude>
-    <ClInclude Include="External\DXSample.h">
       <Filter>External</Filter>
     </ClInclude>
     <ClInclude Include="External\DXSampleHelper.h">
