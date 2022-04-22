@@ -117,7 +117,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="External\DXSample.cpp" />
-    <ClCompile Include="External\Win32Application.cpp" />
     <ClCompile Include="Source\BindlessSample.cpp" />
     <ClCompile Include="Source\DescriptorManager.cpp" />
     <ClCompile Include="Source\Main.cpp" />
@@ -126,7 +125,6 @@
     <ClInclude Include="External\d3dx12.h" />
     <ClInclude Include="External\DXSample.h" />
     <ClInclude Include="External\DXSampleHelper.h" />
-    <ClInclude Include="External\Win32Application.h" />
     <ClInclude Include="Source\BindlessSample.h" />
     <ClInclude Include="Source\DescriptorManager.h" />
   </ItemGroup>

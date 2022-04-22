@@ -3,6 +3,81 @@
 
 namespace
 {
+    LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+    {
+        BindlessSample* pSample = reinterpret_cast<BindlessSample*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+
+        switch (message)
+        {
+        case WM_CREATE:
+        {
+            // Save the DXSample* passed in to CreateWindow.
+            LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
+            SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
+        }
+        return 0;
+
+        case WM_KEYDOWN:
+            if (pSample)
+            {
+                pSample->OnKeyDown(static_cast<UINT8>(wParam));
+            }
+            return 0;
+
+        case WM_KEYUP:
+            if (pSample)
+            {
+                pSample->OnKeyUp(static_cast<UINT8>(wParam));
+            }
+            return 0;
+
+        case WM_PAINT:
+            if (pSample)
+            {
+                pSample->OnUpdate();
+                pSample->OnRender();
+            }
+            return 0;
+
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            return 0;
+        }
+
+        // Handle any messages the switch statement didn't.
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+
+    HWND CreateWindowHandle(HINSTANCE hInstance, UINT width, UINT height, BindlessSample* pSample)
+    {
+        WNDCLASSEX windowClass = { 0 };
+        windowClass.cbSize = sizeof(WNDCLASSEX);
+        windowClass.style = CS_HREDRAW | CS_VREDRAW;
+        windowClass.lpfnWndProc = WindowProc;
+        windowClass.hInstance = hInstance;
+        windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+        windowClass.lpszClassName = L"DXSampleClass";
+        RegisterClassEx(&windowClass);
+
+        RECT windowRect = { 0, 0, static_cast<LONG>(width), static_cast<LONG>(height) };
+        AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+
+        HWND hwnd = CreateWindow(
+            windowClass.lpszClassName,
+            pSample->GetTitle(),
+            WS_OVERLAPPEDWINDOW,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            windowRect.right - windowRect.left,
+            windowRect.bottom - windowRect.top,
+            nullptr,
+            nullptr,
+            hInstance,
+            pSample);
+
+        return hwnd;
+    }
+
     void EnableDebugLayer(UINT& factoryFlags)
     {
         // Requires the Graphics Tools "optional feature".
@@ -14,11 +89,16 @@ namespace
         }
     }
 
-    ComPtr<IDXGIFactory4> CreateFactory(UINT factoryFlags)
+    ComPtr<IDXGIFactory4> CreateFactory(HWND hwnd)
     {
+        UINT factoryFlags = 0;
+
+#if defined(_DEBUG)
+        EnableDebugLayer(factoryFlags);
+#endif
         ComPtr<IDXGIFactory4> factory;
         ThrowIfFailed(CreateDXGIFactory2(factoryFlags, IID_PPV_ARGS(&factory)));
-        ThrowIfFailed(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
+        ThrowIfFailed(factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
         return factory;
     }
 
@@ -48,7 +128,7 @@ namespace
         return commandQueue;
     }
 
-    ComPtr<IDXGISwapChain3> CreateSwapChain(UINT frameCount, UINT width, UINT height, ID3D12CommandQueue* queue, IDXGIFactory4* factory)
+    ComPtr<IDXGISwapChain3> CreateSwapChain(HWND hwnd, UINT frameCount, UINT width, UINT height, ID3D12CommandQueue* queue, IDXGIFactory4* factory)
     {
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
         swapChainDesc.BufferCount = frameCount;
@@ -62,7 +142,7 @@ namespace
         ComPtr<IDXGISwapChain1> swapChain;
         ThrowIfFailed(factory->CreateSwapChainForHwnd(
             queue,
-            Win32Application::GetHwnd(),
+            hwnd,
             &swapChainDesc,
             nullptr,
             nullptr,
@@ -104,38 +184,45 @@ namespace
     }
 
 }
-BindlessSample::BindlessSample(UINT width, UINT height, std::wstring name) :
-    DXSample(width, height, name),
-    m_frameIndex(0),
-    m_viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)),
-    m_scissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height)),
-    m_rtvDescriptorSize(0)
+BindlessSample::BindlessSample(HINSTANCE hInstance, UINT width, UINT height, std::wstring name, int nCmdShow)
+    : DXSample(width, height, name)
+    , m_hwnd(CreateWindowHandle(hInstance, width, height, this))
+    , m_viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height))
+    , m_scissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height))
+    , m_factory(CreateFactory(m_hwnd))
+    , m_device(CreateDevice(m_factory.Get()))
+    , m_commandQueue(CreateCommandQueue(m_device.Get()))
+    , m_swapChain(CreateSwapChain(m_hwnd, FrameCount, m_width, m_height, m_commandQueue.Get(), m_factory.Get()))
+    , m_commandAllocator(CreateCommandAllocator(m_device.Get()))
+    , m_rtvDescriptorSize(m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV))
+    , m_rtvHeap(CreateRtvHeap(FrameCount, m_device.Get()))
+    , m_renderTargets{
+        CreateRtv(0, m_rtvHeap.Get(), m_rtvDescriptorSize, m_device.Get(), m_swapChain.Get()),
+        CreateRtv(1, m_rtvHeap.Get(), m_rtvDescriptorSize, m_device.Get(), m_swapChain.Get())}
+    , m_descriptorManager(m_device.Get())
+    , m_frameIndex(m_swapChain->GetCurrentBackBufferIndex())
 {
+    LoadAssets();
+
+    ShowWindow(m_hwnd, nCmdShow);
+
+    MSG msg = {};
+    while (msg.message != WM_QUIT)
+    {
+        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
 }
 
-void BindlessSample::OnInit()
+BindlessSample::~BindlessSample()
 {
-    UINT factoryFlags = 0;
-
-#if defined(_DEBUG)
-    EnableDebugLayer(factoryFlags);
-#endif
-
-    auto factory = CreateFactory(factoryFlags);
-    m_device = CreateDevice(factory.Get());
-    m_commandQueue = CreateCommandQueue(m_device.Get());
-    m_swapChain = CreateSwapChain(FrameCount, m_width, m_height, m_commandQueue.Get(), factory.Get());
-    m_commandAllocator = CreateCommandAllocator(m_device.Get());
-    m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    m_rtvHeap = CreateRtvHeap(FrameCount, m_device.Get());
-    m_renderTargets[0] = CreateRtv(0, m_rtvHeap.Get(), m_rtvDescriptorSize, m_device.Get(), m_swapChain.Get());
-    m_renderTargets[1] = CreateRtv(1, m_rtvHeap.Get(), m_rtvDescriptorSize, m_device.Get(), m_swapChain.Get());
-
-    m_descriptorManager.init(m_device.Get());
-
-    m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
-
-    LoadAssets();
+    // Ensure that the GPU is no longer referencing resources that are about to be
+    // cleaned up by the destructor.
+    WaitForPreviousFrame();
+    CloseHandle(m_fenceEvent);
 }
 
 void BindlessSample::LoadAssets()
@@ -298,14 +385,7 @@ void BindlessSample::OnRender()
     WaitForPreviousFrame();
 }
 
-void BindlessSample::OnDestroy()
-{
-    // Ensure that the GPU is no longer referencing resources that are about to be
-    // cleaned up by the destructor.
-    WaitForPreviousFrame();
 
-    CloseHandle(m_fenceEvent);
-}
 
 void BindlessSample::PopulateCommandList()
 {

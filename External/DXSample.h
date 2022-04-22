@@ -11,7 +11,6 @@
 
 #pragma once
 #include "DXSampleHelper.h"
-#include "Win32Application.h"
 #include <dxgi1_6.h>
 
 void GetHardwareAdapter(
@@ -25,10 +24,8 @@ public:
     DXSample(UINT width, UINT height, std::wstring name);
     virtual ~DXSample();
 
-    virtual void OnInit() = 0;
     virtual void OnUpdate() = 0;
     virtual void OnRender() = 0;
-    virtual void OnDestroy() = 0;
 
     // Samples override the event handlers to handle specific messages.
     virtual void OnKeyDown(UINT8 /*key*/)   {}
@@ -39,12 +36,8 @@ public:
     UINT GetHeight() const          { return m_height; }
     const WCHAR* GetTitle() const   { return m_title.c_str(); }
 
-    void ParseCommandLineArgs(_In_reads_(argc) WCHAR* argv[], int argc);
-
 protected:
     std::wstring GetAssetFullPath(LPCWSTR assetName);
-
-     void SetCustomWindowText(LPCWSTR text);
 
     // Viewport dimensions.
     UINT m_width;

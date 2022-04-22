@@ -7,7 +7,7 @@ using Microsoft::WRL::ComPtr;
 class DescriptorManager
 {
 public:
-    void init(ID3D12Device* device);
+    DescriptorManager(ID3D12Device* device);
     void allocateTexture2DUavDescriptor(ID3D12Resource* texture, DXGI_FORMAT format);
     void allocateTexture2DSrvDescriptor(ID3D12Resource* texture, DXGI_FORMAT format);
     void allocateTexture3DUavDescriptor(ID3D12Resource* texture, DXGI_FORMAT format);

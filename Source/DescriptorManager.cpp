@@ -3,7 +3,7 @@
 #include <External/d3dx12.h>
 
 
-void DescriptorManager::init(ID3D12Device* device)
+DescriptorManager::DescriptorManager(ID3D12Device* device)
 {
     m_device = device;
 	

@@ -36,6 +36,6 @@ _Use_decl_annotations_
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
     enablePixCapture();
-    BindlessSample sample(720, 720, L"Bindless");
-    return Win32Application::Run(&sample, hInstance, nCmdShow);
+    BindlessSample sample(hInstance, 720, 720, L"Bindless", nCmdShow);
+    return 0;
 }
