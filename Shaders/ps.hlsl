@@ -1,4 +1,4 @@
-#include "include.hlsl"
+#include "include.h"
 
 struct PSInput
 {

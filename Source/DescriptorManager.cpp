@@ -1,7 +1,6 @@
-#include "stdafx.h"
 #include "DescriptorManager.h"
-
 #include "DXSampleHelper.h"
+#include "d3dx12.h"
 
 
 void DescriptorManager::init(ID3D12Device* device)

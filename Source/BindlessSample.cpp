@@ -9,8 +9,8 @@
 //
 //*********************************************************
 
-#include "stdafx.h"
 #include "BindlessSample.h"
+#include <D3Dcompiler.h>
 
 BindlessSample::BindlessSample(UINT width, UINT height, std::wstring name) :
     DXSample(width, height, name),

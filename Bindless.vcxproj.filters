@@ -1,76 +1,62 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{67bebf86-9539-4f7f-b9e9-a376519ec1f1}</UniqueIdentifier>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{fb7ee431-5c91-46fa-a3f7-dc00d8269316}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{954a8f61-1c3e-419b-baca-c5e2b83c689a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Assets">
-      <UniqueIdentifier>{09095d68-bcd7-45c4-b007-5c8ddb5d60a4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Assets\Shaders">
-      <UniqueIdentifier>{8b0cb0c9-e0d8-4107-91c8-11654fac88e7}</UniqueIdentifier>
+    <Filter Include="Source">
+      <UniqueIdentifier>{8c8a5121-80ea-4dc6-9518-f4fedaeb5a1f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="d3dx12.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DXSample.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DXSampleHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BindlessSample.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Win32Application.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DescriptorManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\BindlessSample.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="Main.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\DescriptorManager.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="DXSample.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\DXSample.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="BindlessSample.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Main.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="Win32Application.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DescriptorManager.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Win32Application.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="vs.hlsl">
-      <Filter>Assets\Shaders</Filter>
+    <ClInclude Include="Source\BindlessSample.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DescriptorManager.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DXSample.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DXSampleHelper.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Win32Application.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\d3dx12.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\include.h">
+      <Filter>Shaders</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shaders\cs.hlsl">
+      <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="ps.hlsl">
-      <Filter>Assets\Shaders</Filter>
+    <FxCompile Include="Shaders\ps.hlsl">
+      <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="cs.hlsl">
-      <Filter>Assets\Shaders</Filter>
+    <FxCompile Include="Shaders\vs.hlsl">
+      <Filter>Shaders</Filter>
     </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="include.hlsl">
-      <Filter>Assets\Shaders</Filter>
-    </None>
   </ItemGroup>
 </Project>

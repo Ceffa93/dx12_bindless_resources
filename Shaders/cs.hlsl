@@ -1,4 +1,4 @@
-#include "include.hlsl"
+#include "include.h"
 
 [numthreads(8, 8, 1)]
 void CSMain(int2 n : SV_DispatchThreadID)

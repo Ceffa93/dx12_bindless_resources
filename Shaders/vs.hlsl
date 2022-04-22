@@ -1,4 +1,4 @@
-#include "include.hlsl"
+#include "include.h"
 
 static const float4 FAST_FULLSCREEN_VERTEX_POS[3] = { float4(-1, 1, 1, 1), float4(3, 1, 1, 1), float4(-1, -3, 1, 1) };
 static const float2 FAST_FULLSCREEN_VERTEX_UV[3] = { float2(0, 0), float2(2, 0), float2(0, 2) };

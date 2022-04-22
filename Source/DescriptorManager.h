@@ -1,3 +1,7 @@
+#pragma once
+#include <wrl.h>
+#include <d3d12.h>
+
 using Microsoft::WRL::ComPtr;
 
 class DescriptorManager

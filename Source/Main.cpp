@@ -8,7 +8,6 @@
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
 //*********************************************************
-#include "stdafx.h"
 #include <filesystem>
 #include <shlobj.h>
 #include "BindlessSample.h"
