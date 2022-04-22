@@ -7,6 +7,9 @@
     <Filter Include="Source">
       <UniqueIdentifier>{8c8a5121-80ea-4dc6-9518-f4fedaeb5a1f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External">
+      <UniqueIdentifier>{55ca6601-6d68-40c1-bcd7-d0ff49774901}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\BindlessSample.cpp">
@@ -15,14 +18,14 @@
     <ClCompile Include="Source\DescriptorManager.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="Source\DXSample.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Main.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Win32Application.cpp">
-      <Filter>Source</Filter>
+    <ClCompile Include="External\DXSample.cpp">
+      <Filter>External</Filter>
+    </ClCompile>
+    <ClCompile Include="External\Win32Application.cpp">
+      <Filter>External</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -32,20 +35,20 @@
     <ClInclude Include="Source\DescriptorManager.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="Source\DXSample.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\DXSampleHelper.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Win32Application.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\d3dx12.h">
-      <Filter>Source</Filter>
-    </ClInclude>
     <ClInclude Include="Shaders\include.h">
       <Filter>Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="External\Win32Application.h">
+      <Filter>External</Filter>
+    </ClInclude>
+    <ClInclude Include="External\d3dx12.h">
+      <Filter>External</Filter>
+    </ClInclude>
+    <ClInclude Include="External\DXSample.h">
+      <Filter>External</Filter>
+    </ClInclude>
+    <ClInclude Include="External\DXSampleHelper.h">
+      <Filter>External</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

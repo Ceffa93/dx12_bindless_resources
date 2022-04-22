@@ -10,9 +10,9 @@
 //*********************************************************
 
 #pragma once
-#include "DXSample.h"
 #include "DescriptorManager.h"
-#include "d3dx12.h"
+#include <External/DXSample.h>
+#include <External/d3dx12.h>
 #include <array>
 #include <DirectXMath.h>
 
