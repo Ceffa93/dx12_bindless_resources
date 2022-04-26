@@ -1,6 +1,7 @@
 #pragma once
 #include <wrl.h>
 #include <d3d12.h>
+#include <Shared/Shared.h>
 
 using Microsoft::WRL::ComPtr;
 
@@ -8,11 +9,12 @@ class DescriptorManager
 {
 public:
     DescriptorManager(ID3D12Device* device);
-    D3D12_GPU_DESCRIPTOR_HANDLE allocateTexture2DUavDescriptor(ID3D12Resource* texture, DXGI_FORMAT format);
-    D3D12_GPU_DESCRIPTOR_HANDLE allocateTexture2DSrvDescriptor(ID3D12Resource* texture, DXGI_FORMAT format);
-    D3D12_GPU_DESCRIPTOR_HANDLE allocateTexture3DUavDescriptor(ID3D12Resource* texture, DXGI_FORMAT format);
-    D3D12_GPU_DESCRIPTOR_HANDLE allocateTexture3DSrvDescriptor(ID3D12Resource* texture, DXGI_FORMAT format);
-    D3D12_GPU_DESCRIPTOR_HANDLE allocateSamplerDescriptor(D3D12_SAMPLER_DESC& desc);
+    DescriptorHandle allocateTexture2DUavDescriptor(ID3D12Resource* texture, D3D12_UNORDERED_ACCESS_VIEW_DESC);
+    DescriptorHandle allocateTexture2DSrvDescriptor(ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC);
+    DescriptorHandle allocateTexture3DUavDescriptor(ID3D12Resource* texture, D3D12_UNORDERED_ACCESS_VIEW_DESC);
+    DescriptorHandle allocateTexture3DSrvDescriptor(ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC);
+    DescriptorHandle allocateSamplerDescriptor(D3D12_SAMPLER_DESC& desc);
+    DescriptorHandle allocateCbvDescriptor(D3D12_CONSTANT_BUFFER_VIEW_DESC& desc);
     void setHeaps(ID3D12GraphicsCommandList* commandList);
 
     void setSignature(ID3D12GraphicsCommandList* commandList, bool bCompute);
@@ -31,10 +33,10 @@ private:
         SIZE_T lastAllocated;
         SIZE_T gpuStart;
 
-        void allocate(D3D12_CPU_DESCRIPTOR_HANDLE& cpuHandle, D3D12_GPU_DESCRIPTOR_HANDLE& gpuHandle)
+        void allocate(D3D12_CPU_DESCRIPTOR_HANDLE& cpuHandle, DescriptorHandle& handle)
         {
+            handle = unsigned int (lastAllocated * descriptorSize);
             cpuHandle.ptr = cpuStart + lastAllocated * descriptorSize;
-            gpuHandle.ptr = gpuStart + lastAllocated * descriptorSize;
             lastAllocated++;
         }
 

@@ -124,6 +124,8 @@
   <ItemGroup>
     <ClInclude Include="External\d3dx12.h" />
     <ClInclude Include="External\DXSampleHelper.h" />
+    <ClInclude Include="Shared\Flags.h" />
+    <ClInclude Include="Shared\Shared.h" />
     <ClInclude Include="Source\Renderer.h" />
     <ClInclude Include="Source\DescriptorManager.h" />
     <ClInclude Include="Source\Sample.h" />

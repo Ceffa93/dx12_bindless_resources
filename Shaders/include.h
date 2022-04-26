@@ -1,3 +1,5 @@
+#include "../Shared/Flags.h"
+
 #define TEX2D_UAV 0 
 #define TEX2D_SRV 1 
 #define TEX3D_UAV 2

@@ -1,5 +1,6 @@
 #include "Sample.h"
 #include "Renderer.h"
+#include <Shared/Flags.h>
 #include <External/DXSampleHelper.h>
 #include <D3Dcompiler.h>
 
@@ -51,60 +52,6 @@ namespace
         delete pPixelShaderData;
         return pipelineState;
     }
-
-    ComPtr<ID3D12Resource> Create2DTexture(UINT textureWidth, UINT textureHeight, ID3D12Device* device, DescriptorManager& descriptorManager)
-    {
-        D3D12_RESOURCE_DESC desc = {};
-        desc.MipLevels = 1;
-        desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        desc.Width = textureWidth;
-        desc.Height = textureHeight;
-        desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-        desc.DepthOrArraySize = 1;
-        desc.SampleDesc.Count = 1;
-        desc.SampleDesc.Quality = 0;
-        desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-
-        ComPtr<ID3D12Resource> texture;
-        ThrowIfFailed(device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-            D3D12_HEAP_FLAG_NONE,
-            &desc,
-            D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-            nullptr,
-            IID_PPV_ARGS(&texture)));
-
-        descriptorManager.allocateTexture2DUavDescriptor(texture.Get(), desc.Format);
-        descriptorManager.allocateTexture2DSrvDescriptor(texture.Get(), desc.Format);
-        return texture;
-    }
-
-    ComPtr<ID3D12Resource> Create3DTexture(UINT textureWidth, UINT textureHeight, UINT textureDepth, ID3D12Device* device, DescriptorManager& descriptorManager)
-    {
-        D3D12_RESOURCE_DESC desc = {};
-        desc.MipLevels = 1;
-        desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        desc.Width = textureWidth;
-        desc.Height = textureHeight;
-        desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-        desc.DepthOrArraySize = textureDepth;
-        desc.SampleDesc.Count = 1;
-        desc.SampleDesc.Quality = 0;
-        desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
-
-        ComPtr<ID3D12Resource> texture;
-        ThrowIfFailed(device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-            D3D12_HEAP_FLAG_NONE,
-            &desc,
-            D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-            nullptr,
-            IID_PPV_ARGS(&texture)));
-
-        descriptorManager.allocateTexture3DUavDescriptor(texture.Get(), desc.Format);
-        descriptorManager.allocateTexture3DSrvDescriptor(texture.Get(), desc.Format);
-        return texture;
-    }
 }
 
 
@@ -113,20 +60,124 @@ Sample::Sample(Renderer& renderer)
     , m_descriptorManager(m_renderer.m_device.Get())
     , m_graphicPipelineState(CreateGraphicPipelineState(m_renderer.m_device.Get(), m_renderer.m_assetPath, m_descriptorManager))
     , m_computePipelineState(CreateComputePipelineState(m_renderer.m_device.Get(), m_renderer.m_assetPath, m_descriptorManager))
-    , m_2DTexture(Create2DTexture(TextureWidth, TextureHeight, m_renderer.m_device.Get(), m_descriptorManager))
-    , m_3DTexture(Create3DTexture(TextureWidth, TextureHeight, TextureDepth, m_renderer.m_device.Get(), m_descriptorManager))
 {
-    D3D12_SAMPLER_DESC samplerDesc;
-    samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-    samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    samplerDesc.MipLODBias = 0;
-    samplerDesc.MaxAnisotropy = 0;
-    samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-    samplerDesc.MinLOD = 0.0f;
-    samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
-    m_descriptorManager.allocateSamplerDescriptor(samplerDesc);
+    {
+        auto format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        {
+            D3D12_RESOURCE_DESC desc = {};
+            desc.MipLevels = 1;
+            desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+            desc.Width = TextureWidth;
+            desc.Height = TextureHeight;
+            desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+            desc.DepthOrArraySize = 1;
+            desc.SampleDesc.Count = 1;
+            desc.SampleDesc.Quality = 0;
+            desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+            ThrowIfFailed(m_renderer.m_device->CreateCommittedResource(
+                &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+                D3D12_HEAP_FLAG_NONE,
+                &desc,
+                D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                nullptr,
+                IID_PPV_ARGS(&m_2DTexture)));
+        }
+        {
+            D3D12_SHADER_RESOURCE_VIEW_DESC desc = {};
+            desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+            desc.Format = format;
+            desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+            desc.Texture2D.MipLevels = 1;
+            m_2D_srv = m_descriptorManager.allocateTexture2DSrvDescriptor(m_2DTexture.Get(), desc);
+        }
+        {
+            D3D12_UNORDERED_ACCESS_VIEW_DESC desc = {};
+            desc.Format = format;
+            desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+            m_2D_uav = m_descriptorManager.allocateTexture2DUavDescriptor(m_2DTexture.Get(), desc);
+        }
+    }
+    {
+        auto format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        {
+            D3D12_RESOURCE_DESC desc = {};
+            desc.MipLevels = 1;
+            desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+            desc.Width = TextureWidth;
+            desc.Height = TextureHeight;
+            desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+            desc.DepthOrArraySize = TextureDepth;
+            desc.SampleDesc.Count = 1;
+            desc.SampleDesc.Quality = 0;
+            desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+
+            ThrowIfFailed(m_renderer.m_device->CreateCommittedResource(
+                &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+                D3D12_HEAP_FLAG_NONE,
+                &desc,
+                D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                nullptr,
+                IID_PPV_ARGS(&m_3DTexture)));
+        }
+        {
+            D3D12_SHADER_RESOURCE_VIEW_DESC desc = {};
+            desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+            desc.Format = format;
+            desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+            desc.Texture3D.MipLevels = 1;
+            m_3D_srv = m_descriptorManager.allocateTexture3DSrvDescriptor(m_3DTexture.Get(), desc);
+        }
+        {
+            D3D12_UNORDERED_ACCESS_VIEW_DESC desc = {};
+            desc.Format = format;
+            desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
+            desc.Texture3D.WSize = -1;
+            m_3D_uav = m_descriptorManager.allocateTexture3DUavDescriptor(m_3DTexture.Get(), desc);
+        }
+    }
+    {
+        D3D12_SAMPLER_DESC samplerDesc;
+        samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+        samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        samplerDesc.MipLODBias = 0;
+        samplerDesc.MaxAnisotropy = 0;
+        samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+        samplerDesc.MinLOD = 0.0f;
+        samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+        m_sv = m_descriptorManager.allocateSamplerDescriptor(samplerDesc);
+    }
+    {
+        ThrowIfFailed(m_renderer.m_device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(sizeof(Flags)),
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&m_buffer)));
+
+        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+        cbvDesc.BufferLocation = m_buffer->GetGPUVirtualAddress();
+        cbvDesc.SizeInBytes = sizeof(Flags);
+        m_cbv = m_descriptorManager.allocateCbvDescriptor(cbvDesc);
+    }
+    
+    {
+        CD3DX12_RANGE readRange(0, 0);
+        Flags flags;
+        flags.srv2D = m_2D_srv;
+        flags.uav2D = m_2D_uav;
+        flags.srv3D = m_3D_srv;
+        flags.uav3D = m_3D_uav;
+        flags.sampler = m_sv;
+
+        UINT8* cbvData;
+        ThrowIfFailed(m_buffer->Map(0, &readRange, reinterpret_cast<void**>(&cbvData)));
+        memcpy(cbvData, &flags, sizeof(flags));
+        m_buffer->Unmap(0, &readRange);
+    }
 }
 
 void Sample::OnUpdate()

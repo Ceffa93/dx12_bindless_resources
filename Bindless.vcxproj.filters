@@ -10,6 +10,9 @@
     <Filter Include="External">
       <UniqueIdentifier>{55ca6601-6d68-40c1-bcd7-d0ff49774901}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shared">
+      <UniqueIdentifier>{df282033-b1bd-4939-8fe8-70532414e90d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Renderer.cpp">
@@ -43,6 +46,12 @@
     </ClInclude>
     <ClInclude Include="Source\Sample.h">
       <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\Flags.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\Shared.h">
+      <Filter>Shared</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
