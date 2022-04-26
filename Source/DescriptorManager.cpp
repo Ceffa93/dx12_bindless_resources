@@ -54,9 +54,13 @@ DescriptorManager::DescriptorManager(ID3D12Device* device)
         CD3DX12_DESCRIPTOR_RANGE1 samplerRanges[1];
         samplerRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, -1, 0, 1, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, 0);
 
-        CD3DX12_ROOT_PARAMETER1 rootParameters[2];
-        rootParameters[0].InitAsDescriptorTable(_countof(resourcesRanges), resourcesRanges);
-        rootParameters[1].InitAsDescriptorTable(_countof(samplerRanges), samplerRanges);
+        CD3DX12_ROOT_PARAMETER1 rootParameters[16];
+        for (UINT i = 0; i < 14; i++)
+        {
+            rootParameters[i].InitAsConstantBufferView(i, 0u, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_ALL);
+        }
+        rootParameters[14].InitAsDescriptorTable(_countof(resourcesRanges), resourcesRanges);
+        rootParameters[15].InitAsDescriptorTable(_countof(samplerRanges), samplerRanges);
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
         rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -147,13 +151,13 @@ void DescriptorManager::setTables(ID3D12GraphicsCommandList* commandList, bool b
     samplerHandle.ptr = m_samplerHeap.gpuStart;
     if (bCompute)
     {
-        commandList->SetComputeRootDescriptorTable(0, resourceHandle);
-        commandList->SetComputeRootDescriptorTable(1, samplerHandle);
+        commandList->SetComputeRootDescriptorTable(14, resourceHandle);
+        commandList->SetComputeRootDescriptorTable(15, samplerHandle);
     }
     else
     {
-        commandList->SetGraphicsRootDescriptorTable(0, resourceHandle);
-        commandList->SetGraphicsRootDescriptorTable(1, samplerHandle);
+        commandList->SetGraphicsRootDescriptorTable(14, resourceHandle);
+        commandList->SetGraphicsRootDescriptorTable(15, samplerHandle);
     }
 }
 
