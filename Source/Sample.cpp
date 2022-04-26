@@ -157,11 +157,6 @@ Sample::Sample(Renderer& renderer)
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&m_buffer)));
-
-        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-        cbvDesc.BufferLocation = m_buffer->GetGPUVirtualAddress();
-        cbvDesc.SizeInBytes = sizeof(Flags);
-        m_cbv = m_descriptorManager.allocateCbvDescriptor(cbvDesc);
     }
     
     {
@@ -192,6 +187,7 @@ void Sample::OnRender(ID3D12GraphicsCommandList* commandList)
         commandList->SetPipelineState(m_computePipelineState.Get());
         m_descriptorManager.setSignature(commandList, true);
         m_descriptorManager.setTables(commandList, true);
+        m_descriptorManager.setRootCbv(commandList, 0, m_buffer.Get(), true);
         commandList->Dispatch(1, 1, 1);
     }
 
@@ -202,6 +198,7 @@ void Sample::OnRender(ID3D12GraphicsCommandList* commandList)
         commandList->SetPipelineState(m_graphicPipelineState.Get());
         m_descriptorManager.setSignature(commandList, false);
         m_descriptorManager.setTables(commandList, false);
+        m_descriptorManager.setRootCbv(commandList, 0, m_buffer.Get(), false);
 
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         commandList->DrawInstanced(3, 1, 0, 0);

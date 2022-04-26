@@ -19,6 +19,7 @@ public:
 
     void setSignature(ID3D12GraphicsCommandList* commandList, bool bCompute);
     void setTables(ID3D12GraphicsCommandList* commandList, bool bCompute);
+    void setRootCbv(ID3D12GraphicsCommandList* commandList, unsigned int idx, ID3D12Resource* buffer, bool bCompute);
 	
     ComPtr<ID3D12RootSignature> m_rootSignature;
 
@@ -35,7 +36,7 @@ private:
 
         void allocate(D3D12_CPU_DESCRIPTOR_HANDLE& cpuHandle, DescriptorHandle& handle)
         {
-            handle = unsigned int (lastAllocated * descriptorSize);
+            handle = unsigned int(lastAllocated);
             cpuHandle.ptr = cpuStart + lastAllocated * descriptorSize;
             lastAllocated++;
         }

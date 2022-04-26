@@ -161,4 +161,18 @@ void DescriptorManager::setTables(ID3D12GraphicsCommandList* commandList, bool b
     }
 }
 
+void DescriptorManager::setRootCbv(ID3D12GraphicsCommandList* commandList, unsigned int idx, ID3D12Resource* buffer, bool bCompute)
+{
+    auto addr = buffer->GetGPUVirtualAddress();
+    if (bCompute)
+    {
+        commandList->SetComputeRootConstantBufferView(idx, addr);
+    }
+    else
+    {
+        commandList->SetGraphicsRootConstantBufferView(idx, addr);
+    }
+}
+
+
 

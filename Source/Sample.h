@@ -30,5 +30,5 @@ private:
     ComPtr<ID3D12Resource> m_2DTexture;
     ComPtr<ID3D12Resource> m_3DTexture;
     ComPtr<ID3D12Resource> m_buffer;
-    DescriptorHandle m_2D_srv, m_2D_uav, m_3D_srv, m_3D_uav, m_sv, m_cbv;
+    DescriptorHandle m_2D_srv, m_2D_uav, m_3D_srv, m_3D_uav, m_sv;
 };

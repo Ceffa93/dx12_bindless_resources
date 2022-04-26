@@ -1,9 +1,9 @@
 #include "../Shared/Flags.h"
 
-#define TEX2D_UAV 0 
-#define TEX2D_SRV 1 
-#define TEX3D_UAV 2
-#define TEX3D_SRV 3 
+cbuffer Buffer0 : register(b0, space0)
+{
+    Flags flags;
+}
 
 RWTexture2D	<float4> g_rw_texture2D[] : register(u0, space1);
 RWTexture3D	<float4> g_rw_texture3D[] : register(u0, space2);

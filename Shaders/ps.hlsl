@@ -11,6 +11,6 @@ float4 PSMain(PSInput input) : SV_TARGET
 
 	float2 uv = float2(frac(input.uv.x * 2), input.uv.y);
 	
-	if (left) return g_texture2D[TEX2D_SRV].Sample(g_sampler[0], uv);
-	else return g_texture3D[TEX3D_SRV].Sample(g_sampler[0], float3(uv,1));
+	if (left) return g_texture2D[flags.srv2D].Sample(g_sampler[flags.sampler], uv);
+	else return g_texture3D[flags.srv3D].Sample(g_sampler[flags.sampler], float3(uv,1));
 }
