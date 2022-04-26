@@ -152,20 +152,11 @@ void Sample::OnRender(ID3D12GraphicsCommandList* commandList)
         m_descriptorManager.setSignature(commandList, false);
         m_descriptorManager.setTables(commandList, false);
 
-        commandList->RSSetViewports(1, &m_renderer.m_viewport);
-        commandList->RSSetScissorRects(1, &m_renderer.m_scissorRect);
-
-        commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderer.m_renderTargets[m_renderer.m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_renderer.m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_renderer.m_frameIndex, m_renderer.m_rtvDescriptorSize);
-        commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         commandList->DrawInstanced(3, 1, 0, 0);
 
         commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_2DTexture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
         commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_3DTexture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
 
-        commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderer.m_renderTargets[m_renderer.m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
     }
 }
