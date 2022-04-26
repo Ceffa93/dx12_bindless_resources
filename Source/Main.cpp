@@ -1,7 +1,7 @@
 
 #include <filesystem>
 #include <shlobj.h>
-#include "BindlessSample.h"
+#include "Renderer.h"
 
 static void enablePixCapture()
 {
@@ -36,6 +36,6 @@ _Use_decl_annotations_
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
     enablePixCapture();
-    BindlessSample sample(hInstance, nCmdShow);
+    Renderer sample(hInstance, nCmdShow);
     return 0;
 }

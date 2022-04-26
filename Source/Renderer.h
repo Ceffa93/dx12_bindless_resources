@@ -1,29 +1,26 @@
 #pragma once
-#include "DescriptorManager.h"
+#include "Sample.h"
 #include <External/d3dx12.h>
 #include <DirectXMath.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
-#include <array>
 
 using namespace DirectX;
 
 using Microsoft::WRL::ComPtr;
 
-class BindlessSample
+class Renderer
 {
+    friend class Sample;
 public:
-    BindlessSample(HINSTANCE hInstance, int nCmdShow);
-    ~BindlessSample();
+    Renderer(HINSTANCE hInstance, int nCmdShow);
+    ~Renderer();
 
     void OnUpdate();
     void OnRender();
 
 private:
     static const UINT FrameCount = 2;
-    static const UINT TextureWidth = 8;
-    static const UINT TextureHeight = 8;
-    static const UINT TextureDepth = 2;
     static const UINT WindowWidth = 720;
     static const UINT WindowHeight = 360;
 
@@ -39,19 +36,14 @@ private:
     UINT m_rtvDescriptorSize;
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
     ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
-    DescriptorManager m_descriptorManager;
     UINT m_frameIndex;
-    ComPtr<ID3D12PipelineState> m_graphicPipelineState;
-    ComPtr<ID3D12PipelineState> m_computePipelineState;
     ComPtr<ID3D12GraphicsCommandList> m_commandList;
-    ComPtr<ID3D12Resource> m_2DTexture;
-    ComPtr<ID3D12Resource> m_3DTexture;
 
-    // Synchronization objects.
     HANDLE m_fenceEvent;
     ComPtr<ID3D12Fence> m_fence;
     UINT64 m_fenceValue;
 
-    void PopulateCommandList();
+    Sample m_sample;
+
     void WaitForPreviousFrame();
 };

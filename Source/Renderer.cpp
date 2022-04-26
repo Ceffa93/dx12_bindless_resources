@@ -1,6 +1,5 @@
-#include "BindlessSample.h"
+#include "Renderer.h"
 #include <External/DXSampleHelper.h>
-#include <D3Dcompiler.h>
 
 namespace
 {
@@ -63,7 +62,7 @@ namespace
 
     LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
-        BindlessSample* pSample = reinterpret_cast<BindlessSample*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+        Renderer* pSample = reinterpret_cast<Renderer*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
         switch (message)
         {
@@ -92,7 +91,7 @@ namespace
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
 
-    HWND CreateWindowHandle(HINSTANCE hInstance, UINT width, UINT height, BindlessSample* pSample)
+    HWND CreateWindowHandle(HINSTANCE hInstance, UINT width, UINT height, Renderer* pSample)
     {
         WNDCLASSEX windowClass = { 0 };
         windowClass.cbSize = sizeof(WNDCLASSEX);
@@ -228,112 +227,11 @@ namespace
         return renderTarget;
     }
 
-    ComPtr<ID3D12PipelineState> CreateComputePipelineState(ID3D12Device* device, const std::wstring& assetPath, DescriptorManager& descriptorManager)
-    {
-        UINT8* shaderData;
-        UINT shaderDataLength;
-        ThrowIfFailed(ReadDataFromFile((assetPath + L"cs.cso").c_str(), &shaderData, &shaderDataLength));
-
-        D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
-        psoDesc.pRootSignature = descriptorManager.m_rootSignature.Get();
-        psoDesc.CS = CD3DX12_SHADER_BYTECODE(shaderData, shaderDataLength);
-        ComPtr<ID3D12PipelineState> pipelineState;
-        ThrowIfFailed(device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
-
-        delete shaderData;
-        return pipelineState;
-    }
-
-    ComPtr<ID3D12PipelineState> CreateGraphicPipelineState(ID3D12Device* device, const std::wstring& assetPath, DescriptorManager& descriptorManager)
-    {
-        UINT8* pVertexShaderData;
-        UINT8* pPixelShaderData;
-        UINT vertexShaderDataLength;
-        UINT pixelShaderDataLength;
-
-        ThrowIfFailed(ReadDataFromFile((assetPath + L"vs.cso").c_str(), &pVertexShaderData, &vertexShaderDataLength));
-        ThrowIfFailed(ReadDataFromFile((assetPath + L"ps.cso").c_str(), &pPixelShaderData, &pixelShaderDataLength));
-
-        D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-        psoDesc.pRootSignature = descriptorManager.m_rootSignature.Get();
-        psoDesc.VS = CD3DX12_SHADER_BYTECODE(pVertexShaderData, vertexShaderDataLength);
-        psoDesc.PS = CD3DX12_SHADER_BYTECODE(pPixelShaderData, pixelShaderDataLength);
-        psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-        psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-        psoDesc.DepthStencilState.DepthEnable = FALSE;
-        psoDesc.DepthStencilState.StencilEnable = FALSE;
-        psoDesc.SampleMask = UINT_MAX;
-        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        psoDesc.NumRenderTargets = 1;
-        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-        psoDesc.SampleDesc.Count = 1;
-        ComPtr<ID3D12PipelineState> pipelineState;
-        ThrowIfFailed(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
-
-        delete pVertexShaderData;
-        delete pPixelShaderData;
-        return pipelineState;
-    }
-
     ComPtr<ID3D12GraphicsCommandList> CreateCommandList(ID3D12Device* device, ID3D12CommandAllocator* commandAllocator)
     {
         ComPtr<ID3D12GraphicsCommandList> commandList;
         ThrowIfFailed(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, nullptr, IID_PPV_ARGS(&commandList)));
         return commandList;
-    }
-
-    ComPtr<ID3D12Resource> Create2DTexture(UINT textureWidth, UINT textureHeight, ID3D12Device* device, DescriptorManager& descriptorManager)
-    {
-        D3D12_RESOURCE_DESC desc = {};
-        desc.MipLevels = 1;
-        desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        desc.Width = textureWidth;
-        desc.Height = textureHeight;
-        desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-        desc.DepthOrArraySize = 1;
-        desc.SampleDesc.Count = 1;
-        desc.SampleDesc.Quality = 0;
-        desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-
-        ComPtr<ID3D12Resource> texture;
-        ThrowIfFailed(device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-            D3D12_HEAP_FLAG_NONE,
-            &desc,
-            D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-            nullptr,
-            IID_PPV_ARGS(&texture)));
-
-        descriptorManager.allocateTexture2DUavDescriptor(texture.Get(), desc.Format);
-        descriptorManager.allocateTexture2DSrvDescriptor(texture.Get(), desc.Format);
-        return texture;
-    }
-
-    ComPtr<ID3D12Resource> Create3DTexture(UINT textureWidth, UINT textureHeight, UINT textureDepth, ID3D12Device* device, DescriptorManager& descriptorManager)
-    {
-        D3D12_RESOURCE_DESC desc = {};
-        desc.MipLevels = 1;
-        desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        desc.Width = textureWidth;
-        desc.Height = textureHeight;
-        desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-        desc.DepthOrArraySize = textureDepth;
-        desc.SampleDesc.Count = 1;
-        desc.SampleDesc.Quality = 0;
-        desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
-
-        ComPtr<ID3D12Resource> texture;
-        ThrowIfFailed(device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-            D3D12_HEAP_FLAG_NONE,
-            &desc,
-            D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-            nullptr,
-            IID_PPV_ARGS(&texture)));
-
-        descriptorManager.allocateTexture3DUavDescriptor(texture.Get(), desc.Format);
-        descriptorManager.allocateTexture3DSrvDescriptor(texture.Get(), desc.Format);
-        return texture;
     }
 
     HANDLE CreateFenceEvent()
@@ -355,7 +253,7 @@ namespace
 }
 
 
-BindlessSample::BindlessSample(HINSTANCE hInstance, int nCmdShow)
+Renderer::Renderer(HINSTANCE hInstance, int nCmdShow)
     : m_assetPath(CreateAssetPath())
     , m_hwnd(CreateWindowHandle(hInstance, WindowWidth, WindowHeight, this))
     , m_viewport(0.0f, 0.0f, static_cast<float>(WindowWidth), static_cast<float>(WindowHeight))
@@ -370,30 +268,13 @@ BindlessSample::BindlessSample(HINSTANCE hInstance, int nCmdShow)
     , m_renderTargets{
         CreateRtv(0, m_rtvHeap.Get(), m_rtvDescriptorSize, m_device.Get(), m_swapChain.Get()),
         CreateRtv(1, m_rtvHeap.Get(), m_rtvDescriptorSize, m_device.Get(), m_swapChain.Get())}
-    , m_descriptorManager(m_device.Get())
     , m_frameIndex(m_swapChain->GetCurrentBackBufferIndex())
-    , m_graphicPipelineState(CreateGraphicPipelineState(m_device.Get(), m_assetPath, m_descriptorManager))
-    , m_computePipelineState(CreateComputePipelineState(m_device.Get(), m_assetPath, m_descriptorManager))
     , m_commandList(CreateCommandList(m_device.Get(), m_commandAllocator.Get()))
-    , m_2DTexture(Create2DTexture(TextureWidth, TextureHeight, m_device.Get(), m_descriptorManager))
-    , m_3DTexture(Create3DTexture(TextureWidth, TextureHeight, TextureDepth, m_device.Get(), m_descriptorManager))
     , m_fenceEvent(CreateFenceEvent())
     , m_fence(CreateFence(m_device.Get()))
     , m_fenceValue(1)
+    , m_sample(*this)
 {
-    D3D12_SAMPLER_DESC samplerDesc;
-    samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-    samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-    samplerDesc.MipLODBias = 0;
-    samplerDesc.MaxAnisotropy = 0;
-    samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-    samplerDesc.MinLOD = 0.0f;
-    samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
-    m_descriptorManager.allocateSamplerDescriptor(samplerDesc);
-
-
     ThrowIfFailed(m_commandList->Close());
     ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
     m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
@@ -413,19 +294,23 @@ BindlessSample::BindlessSample(HINSTANCE hInstance, int nCmdShow)
     }
 }
 
-BindlessSample::~BindlessSample()
+Renderer::~Renderer()
 {
     WaitForPreviousFrame();
     CloseHandle(m_fenceEvent);
 }
 
-void BindlessSample::OnUpdate()
+void Renderer::OnUpdate()
 {
+    m_sample.OnUpdate();
 }
 
-void BindlessSample::OnRender()
+void Renderer::OnRender()
 {
-    PopulateCommandList();
+    ThrowIfFailed(m_commandAllocator->Reset());
+    ThrowIfFailed(m_commandList->Reset(m_commandAllocator.Get(), nullptr));
+    m_sample.OnRender(m_commandList.Get());
+    ThrowIfFailed(m_commandList->Close());
 
     ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
     m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
@@ -435,50 +320,7 @@ void BindlessSample::OnRender()
     WaitForPreviousFrame();
 }
 
-
-void BindlessSample::PopulateCommandList()
-{
-    ThrowIfFailed(m_commandAllocator->Reset());
-    ThrowIfFailed(m_commandList->Reset(m_commandAllocator.Get(), nullptr));
-
-    m_descriptorManager.setHeaps(m_commandList.Get());
-	
-    {
-        m_commandList->SetPipelineState(m_computePipelineState.Get());
-        m_descriptorManager.setSignature(m_commandList.Get(), true);
-        m_descriptorManager.setTables(m_commandList.Get(), true);
-        m_commandList->Dispatch(1,1,1);
-    }
-
-    m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_2DTexture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-    m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_3DTexture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-  
-    {
-        m_commandList->SetPipelineState(m_graphicPipelineState.Get());
-        m_descriptorManager.setSignature(m_commandList.Get(), false);
-        m_descriptorManager.setTables(m_commandList.Get(), false);
-
-        m_commandList->RSSetViewports(1, &m_viewport);
-        m_commandList->RSSetScissorRects(1, &m_scissorRect);
-
-        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
-        m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-
-        m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        m_commandList->DrawInstanced(3, 1, 0, 0);
-
-        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_2DTexture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
-        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_3DTexture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
-
-        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-    }
-	
-    ThrowIfFailed(m_commandList->Close());
-}
-
-void BindlessSample::WaitForPreviousFrame()
+void Renderer::WaitForPreviousFrame()
 {
     const UINT64 fence = m_fenceValue;
     ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), fence));
