@@ -973,10 +973,10 @@ struct CD3DX12_ROOT_DESCRIPTOR : public D3D12_ROOT_DESCRIPTOR
         Init(*this, shaderRegister, registerSpace);
     }
 
-    static inline void Init(_Out_ D3D12_ROOT_DESCRIPTOR &table, UINT shaderRegister, UINT registerSpace = 0) noexcept
+    static inline void Init(_Out_ D3D12_ROOT_DESCRIPTOR &gpuStart, UINT shaderRegister, UINT registerSpace = 0) noexcept
     {
-        table.ShaderRegister = shaderRegister;
-        table.RegisterSpace = registerSpace;
+        gpuStart.ShaderRegister = shaderRegister;
+        gpuStart.RegisterSpace = registerSpace;
     }
 };
 
@@ -1340,14 +1340,14 @@ struct CD3DX12_ROOT_DESCRIPTOR1 : public D3D12_ROOT_DESCRIPTOR1
     }
 
     static inline void Init(
-        _Out_ D3D12_ROOT_DESCRIPTOR1 &table,
+        _Out_ D3D12_ROOT_DESCRIPTOR1 &gpuStart,
         UINT shaderRegister,
         UINT registerSpace = 0,
         D3D12_ROOT_DESCRIPTOR_FLAGS flags = D3D12_ROOT_DESCRIPTOR_FLAG_NONE) noexcept
     {
-        table.ShaderRegister = shaderRegister;
-        table.RegisterSpace = registerSpace;
-        table.Flags = flags;
+        gpuStart.ShaderRegister = shaderRegister;
+        gpuStart.RegisterSpace = registerSpace;
+        gpuStart.Flags = flags;
     }
 };
 

@@ -15,10 +15,10 @@ DescriptorManager::DescriptorManager(ID3D12Device* device)
         heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_resourceHeap.heap)));
 
-        m_resourceHeap.start = m_resourceHeap.heap->GetCPUDescriptorHandleForHeapStart().ptr;
-        m_resourceHeap.table = m_resourceHeap.heap->GetGPUDescriptorHandleForHeapStart().ptr;
+        m_resourceHeap.cpuStart = m_resourceHeap.heap->GetCPUDescriptorHandleForHeapStart().ptr;
+        m_resourceHeap.gpuStart = m_resourceHeap.heap->GetGPUDescriptorHandleForHeapStart().ptr;
         m_resourceHeap.descriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        m_resourceHeap.offset = 0;
+        m_resourceHeap.lastAllocated = 0;
     }
 	{
         D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
@@ -27,10 +27,10 @@ DescriptorManager::DescriptorManager(ID3D12Device* device)
         heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_samplerHeap.heap)));
 
-        m_samplerHeap.start = m_samplerHeap.heap->GetCPUDescriptorHandleForHeapStart().ptr;
-        m_samplerHeap.table = m_samplerHeap.heap->GetGPUDescriptorHandleForHeapStart().ptr;
+        m_samplerHeap.cpuStart = m_samplerHeap.heap->GetCPUDescriptorHandleForHeapStart().ptr;
+        m_samplerHeap.gpuStart = m_samplerHeap.heap->GetGPUDescriptorHandleForHeapStart().ptr;
         m_samplerHeap.descriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-        m_samplerHeap.offset = 0;
+        m_samplerHeap.lastAllocated = 0;
 	}
 
 	
@@ -68,56 +68,71 @@ DescriptorManager::DescriptorManager(ID3D12Device* device)
     }
 }
 
-void DescriptorManager::allocateTexture2DUavDescriptor(ID3D12Resource* texture, DXGI_FORMAT format)
+D3D12_GPU_DESCRIPTOR_HANDLE DescriptorManager::allocateTexture2DUavDescriptor(ID3D12Resource* texture, DXGI_FORMAT format)
 {
     D3D12_UNORDERED_ACCESS_VIEW_DESC desc = {};
     desc.Format = format;
     desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-    D3D12_CPU_DESCRIPTOR_HANDLE handle;
-    handle.ptr = m_resourceHeap.start + m_resourceHeap.offset++ * m_resourceHeap.descriptorSize;
-    m_device->CreateUnorderedAccessView(texture, nullptr, &desc, handle);
+    
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle;
+    m_resourceHeap.allocate(cpuHandle, gpuHandle);
+    m_device->CreateUnorderedAccessView(texture, nullptr, &desc, cpuHandle);
+    return gpuHandle;
 }
 
-void DescriptorManager::allocateTexture2DSrvDescriptor(ID3D12Resource* texture, DXGI_FORMAT format)
+D3D12_GPU_DESCRIPTOR_HANDLE DescriptorManager::allocateTexture2DSrvDescriptor(ID3D12Resource* texture, DXGI_FORMAT format)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC desc = {};
     desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     desc.Format = format;
     desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     desc.Texture2D.MipLevels = 1;
-    D3D12_CPU_DESCRIPTOR_HANDLE handle;
-    handle.ptr = m_resourceHeap.start + m_resourceHeap.offset++ * m_resourceHeap.descriptorSize;
-    m_device->CreateShaderResourceView(texture, &desc, handle);
+  
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle;
+    m_resourceHeap.allocate(cpuHandle, gpuHandle);
+    m_device->CreateShaderResourceView(texture, &desc, cpuHandle);
+    return gpuHandle;
 }
 
-void DescriptorManager::allocateTexture3DUavDescriptor(ID3D12Resource* texture, DXGI_FORMAT format)
+D3D12_GPU_DESCRIPTOR_HANDLE DescriptorManager::allocateTexture3DUavDescriptor(ID3D12Resource* texture, DXGI_FORMAT format)
 {
     D3D12_UNORDERED_ACCESS_VIEW_DESC desc = {};
     desc.Format = format;
     desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
     desc.Texture3D.WSize = -1;
-    D3D12_CPU_DESCRIPTOR_HANDLE handle;
-    handle.ptr = m_resourceHeap.start + m_resourceHeap.offset++ * m_resourceHeap.descriptorSize;
-    m_device->CreateUnorderedAccessView(texture, nullptr, &desc, handle);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle;
+    m_resourceHeap.allocate(cpuHandle, gpuHandle);
+    m_device->CreateUnorderedAccessView(texture, nullptr, &desc, cpuHandle);
+    return gpuHandle;
 }
 
-void DescriptorManager::allocateTexture3DSrvDescriptor(ID3D12Resource* texture, DXGI_FORMAT format)
+D3D12_GPU_DESCRIPTOR_HANDLE DescriptorManager::allocateTexture3DSrvDescriptor(ID3D12Resource* texture, DXGI_FORMAT format)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC desc = {};
     desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     desc.Format = format;
     desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
     desc.Texture3D.MipLevels = 1;
-    D3D12_CPU_DESCRIPTOR_HANDLE handle;
-    handle.ptr = m_resourceHeap.start + m_resourceHeap.offset++ * m_resourceHeap.descriptorSize;
-    m_device->CreateShaderResourceView(texture, &desc, handle);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle;
+    m_resourceHeap.allocate(cpuHandle, gpuHandle);
+    m_device->CreateShaderResourceView(texture, &desc, cpuHandle);
+    return gpuHandle;
 }
 
-void DescriptorManager::allocateSamplerDescriptor(D3D12_SAMPLER_DESC& desc)
+D3D12_GPU_DESCRIPTOR_HANDLE DescriptorManager::allocateSamplerDescriptor(D3D12_SAMPLER_DESC& desc)
 {
-    D3D12_CPU_DESCRIPTOR_HANDLE samplerHandle;
-    samplerHandle.ptr = m_samplerHeap.start + m_samplerHeap.offset++ * m_samplerHeap.descriptorSize;
-    m_device->CreateSampler(&desc, samplerHandle);
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle;
+    m_samplerHeap.allocate(cpuHandle, gpuHandle);
+    auto offset = m_samplerHeap.lastAllocated++;
+    m_device->CreateSampler(&desc, cpuHandle);
+    return gpuHandle;
 }
 
 void DescriptorManager::setHeaps(ID3D12GraphicsCommandList* commandList)
@@ -141,8 +156,8 @@ void DescriptorManager::setSignature(ID3D12GraphicsCommandList* commandList, boo
 void DescriptorManager::setTables(ID3D12GraphicsCommandList* commandList, bool bCompute)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE resourceHandle, samplerHandle;
-    resourceHandle.ptr = m_resourceHeap.table;
-    samplerHandle.ptr = m_samplerHeap.table;
+    resourceHandle.ptr = m_resourceHeap.gpuStart;
+    samplerHandle.ptr = m_samplerHeap.gpuStart;
     if (bCompute)
     {
         commandList->SetComputeRootDescriptorTable(0, resourceHandle);
