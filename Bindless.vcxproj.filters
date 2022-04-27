@@ -56,6 +56,12 @@
     <ClInclude Include="Source\DescriptorHandle.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="Shared\DescriptorList.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\bindless.h">
+      <Filter>Shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\cs.hlsl">
