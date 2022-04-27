@@ -126,6 +126,7 @@
     <ClInclude Include="External\DXSampleHelper.h" />
     <ClInclude Include="Shared\Flags.h" />
     <ClInclude Include="Shared\Shared.h" />
+    <ClInclude Include="Source\DescriptorHandle.h" />
     <ClInclude Include="Source\Renderer.h" />
     <ClInclude Include="Source\DescriptorManager.h" />
     <ClInclude Include="Source\Sample.h" />

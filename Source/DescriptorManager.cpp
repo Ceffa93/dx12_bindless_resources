@@ -47,10 +47,10 @@ DescriptorManager::DescriptorManager(ID3D12Device* device)
         }
 
         CD3DX12_DESCRIPTOR_RANGE1 resourcesRanges[4];
-        resourcesRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, -1, 0, 1, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC, 0);
-        resourcesRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, -1, 0, 2, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC, 0);
-        resourcesRanges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, -1, 0, 1, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC, 0);
-        resourcesRanges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, -1, 0, 2, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC, 0);
+        resourcesRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, -1, 0, 1, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, 0);
+        resourcesRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, -1, 0, 2, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, 0);
+        resourcesRanges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, -1, 0, 1, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, 0);
+        resourcesRanges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, -1, 0, 2, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, 0);
         CD3DX12_DESCRIPTOR_RANGE1 samplerRanges[1];
         samplerRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, -1, 0, 1, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, 0);
 
@@ -72,55 +72,55 @@ DescriptorManager::DescriptorManager(ID3D12Device* device)
     }
 }
 
-DescriptorHandle DescriptorManager::allocateTexture2DUavDescriptor(ID3D12Resource* texture, D3D12_UNORDERED_ACCESS_VIEW_DESC desc)
+unsigned int DescriptorManager::allocateTexture2DUavDescriptor(ID3D12Resource* texture, D3D12_UNORDERED_ACCESS_VIEW_DESC desc)
 {
     D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
-    DescriptorHandle handle;
+    unsigned int handle;
     m_resourceHeap.allocate(cpuHandle, handle);
     m_device->CreateUnorderedAccessView(texture, nullptr, &desc, cpuHandle);
     return handle;
 }
 
-DescriptorHandle DescriptorManager::allocateTexture2DSrvDescriptor(ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC desc)
+unsigned int DescriptorManager::allocateTexture2DSrvDescriptor(ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC desc)
 {
     D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
-    DescriptorHandle handle;
+    unsigned int handle;
     m_resourceHeap.allocate(cpuHandle, handle);
     m_device->CreateShaderResourceView(texture, &desc, cpuHandle);
     return handle;
 }
 
-DescriptorHandle DescriptorManager::allocateTexture3DUavDescriptor(ID3D12Resource* texture, D3D12_UNORDERED_ACCESS_VIEW_DESC desc)
+unsigned int DescriptorManager::allocateTexture3DUavDescriptor(ID3D12Resource* texture, D3D12_UNORDERED_ACCESS_VIEW_DESC desc)
 {
     D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
-    DescriptorHandle handle;
+    unsigned int handle;
     m_resourceHeap.allocate(cpuHandle, handle);
     m_device->CreateUnorderedAccessView(texture, nullptr, &desc, cpuHandle);
     return handle;
 }
 
-DescriptorHandle DescriptorManager::allocateTexture3DSrvDescriptor(ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC desc)
+unsigned int DescriptorManager::allocateTexture3DSrvDescriptor(ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC desc)
 {
     D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
-    DescriptorHandle handle;
+    unsigned int handle;
     m_resourceHeap.allocate(cpuHandle, handle);
     m_device->CreateShaderResourceView(texture, &desc, cpuHandle);
     return handle;
 }
 
-DescriptorHandle DescriptorManager::allocateSamplerDescriptor(D3D12_SAMPLER_DESC& desc)
+unsigned int DescriptorManager::allocateSamplerDescriptor(D3D12_SAMPLER_DESC& desc)
 {
     D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
-    DescriptorHandle handle;
+    unsigned int handle;
     m_samplerHeap.allocate(cpuHandle, handle);
     m_device->CreateSampler(&desc, cpuHandle);
     return handle;
 }
 
-DescriptorHandle DescriptorManager::allocateCbvDescriptor(D3D12_CONSTANT_BUFFER_VIEW_DESC& desc)
+unsigned int DescriptorManager::allocateCbvDescriptor(D3D12_CONSTANT_BUFFER_VIEW_DESC& desc)
 {
     D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
-    DescriptorHandle handle;
+    unsigned int handle;
     m_resourceHeap.allocate(cpuHandle, handle);
     m_device->CreateConstantBufferView(&desc, cpuHandle);
     return handle;

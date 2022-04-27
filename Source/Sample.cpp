@@ -162,11 +162,13 @@ Sample::Sample(Renderer& renderer)
     {
         CD3DX12_RANGE readRange(0, 0);
         Flags flags;
-        flags.srv2D = m_2D_srv;
-        flags.uav2D = m_2D_uav;
-        flags.srv3D = m_3D_srv;
-        flags.uav3D = m_3D_uav;
-        flags.sampler = m_sv;
+        flags.srv2D = DescriptorHandle_Texture2D{ m_2D_srv };
+        flags.uav2D = DescriptorHandle_RWTexture2D_float4{ m_2D_uav };
+        flags.srv3D = DescriptorHandle_Texture3D{ m_3D_srv };
+        flags.uav3D = DescriptorHandle_RWTexture3D_float4{ m_3D_uav };
+        flags.sampler = DescriptorHandle_SamplerState{ m_sv };
+
+        constexpr int t = sizeof(flags);
 
         UINT8* cbvData;
         ThrowIfFailed(m_buffer->Map(0, &readRange, reinterpret_cast<void**>(&cbvData)));
