@@ -1,7 +1,7 @@
 #pragma once
 #include <wrl.h>
 #include <d3d12.h>
-#include "Bindless.h"
+#include "DescriptorHandle.h"
 
 using Microsoft::WRL::ComPtr;
 

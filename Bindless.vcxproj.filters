@@ -62,9 +62,6 @@
     <ClInclude Include="Shaders\Bindless.h">
       <Filter>Shaders</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Bindless.h">
-      <Filter>Source</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\cs.hlsl">
