@@ -83,58 +83,65 @@ DescriptorManager::DescriptorManager(ID3D12Device* device)
     }
 }
 
-unsigned int DescriptorManager::allocateTexture2DUavDescriptor(ID3D12Resource* texture, D3D12_UNORDERED_ACCESS_VIEW_DESC desc)
+unsigned DescriptorManager::allocateResourceDescriptor()
 {
+    // TODO: don't need cpu handle
     D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
     unsigned int handle;
     m_resourceHeap.allocate(cpuHandle, handle);
-    m_device->CreateUnorderedAccessView(texture, nullptr, &desc, cpuHandle);
     return handle;
 }
-
-unsigned int DescriptorManager::allocateTexture2DSrvDescriptor(ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC desc)
+unsigned DescriptorManager::allocateSamplerDescriptor()
 {
-    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
-    unsigned int handle;
-    m_resourceHeap.allocate(cpuHandle, handle);
-    m_device->CreateShaderResourceView(texture, &desc, cpuHandle);
-    return handle;
-}
-
-unsigned int DescriptorManager::allocateTexture3DUavDescriptor(ID3D12Resource* texture, D3D12_UNORDERED_ACCESS_VIEW_DESC desc)
-{
-    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
-    unsigned int handle;
-    m_resourceHeap.allocate(cpuHandle, handle);
-    m_device->CreateUnorderedAccessView(texture, nullptr, &desc, cpuHandle);
-    return handle;
-}
-
-unsigned int DescriptorManager::allocateTexture3DSrvDescriptor(ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC desc)
-{
-    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
-    unsigned int handle;
-    m_resourceHeap.allocate(cpuHandle, handle);
-    m_device->CreateShaderResourceView(texture, &desc, cpuHandle);
-    return handle;
-}
-
-unsigned int DescriptorManager::allocateSamplerDescriptor(D3D12_SAMPLER_DESC& desc)
-{
+    // TODO: don't need cpu handle
     D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
     unsigned int handle;
     m_samplerHeap.allocate(cpuHandle, handle);
-    m_device->CreateSampler(&desc, cpuHandle);
     return handle;
 }
-
-unsigned int DescriptorManager::allocateCbvDescriptor(D3D12_CONSTANT_BUFFER_VIEW_DESC& desc)
+void DescriptorManager::deallocateResourceDescriptor(unsigned int)
 {
-    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
-    unsigned int handle;
-    m_resourceHeap.allocate(cpuHandle, handle);
+    // TODO: stack allocator does not support deallocate
+}
+void DescriptorManager::deallocateSamplerDescriptor(unsigned int)
+{
+    // TODO: stack allocator does not support deallocate
+}
+
+void DescriptorManager::createTexture2DUavDescriptor(unsigned int handle, ID3D12Resource* texture, D3D12_UNORDERED_ACCESS_VIEW_DESC desc)
+{
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ m_resourceHeap.cpuStart + handle * m_resourceHeap.descriptorSize };
+    m_device->CreateUnorderedAccessView(texture, nullptr, &desc, cpuHandle);
+}
+
+void DescriptorManager::createTexture2DSrvDescriptor(unsigned int handle, ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC desc)
+{
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ m_resourceHeap.cpuStart + handle * m_resourceHeap.descriptorSize };
+    m_device->CreateShaderResourceView(texture, &desc, cpuHandle);
+}
+
+void DescriptorManager::createTexture3DUavDescriptor(unsigned int handle, ID3D12Resource* texture, D3D12_UNORDERED_ACCESS_VIEW_DESC desc)
+{
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ m_resourceHeap.cpuStart + handle * m_resourceHeap.descriptorSize };
+    m_device->CreateUnorderedAccessView(texture, nullptr, &desc, cpuHandle);
+}
+
+void DescriptorManager::createTexture3DSrvDescriptor(unsigned int handle, ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC desc)
+{
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ m_resourceHeap.cpuStart + handle * m_resourceHeap.descriptorSize };
+    m_device->CreateShaderResourceView(texture, &desc, cpuHandle);
+}
+
+void DescriptorManager::createSamplerDescriptor(unsigned int handle, D3D12_SAMPLER_DESC& desc)
+{
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ m_samplerHeap.cpuStart + handle * m_samplerHeap.descriptorSize };
+    m_device->CreateSampler(&desc, cpuHandle);
+}
+
+void DescriptorManager::createCbvDescriptor(unsigned int handle, D3D12_CONSTANT_BUFFER_VIEW_DESC& desc)
+{
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ m_resourceHeap.cpuStart + handle * m_resourceHeap.descriptorSize };
     m_device->CreateConstantBufferView(&desc, cpuHandle);
-    return handle;
 }
 
 void DescriptorManager::setHeaps(ID3D12GraphicsCommandList* commandList)

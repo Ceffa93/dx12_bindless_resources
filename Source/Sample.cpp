@@ -89,13 +89,15 @@ Sample::Sample(Renderer& renderer)
             desc.Format = format;
             desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
             desc.Texture2D.MipLevels = 1;
-            m_2D_srv = m_descriptorManager.allocateTexture2DSrvDescriptor(m_2DTexture.Get(), desc);
+            m_2D_srv = m_descriptorManager.allocateResourceDescriptor();
+            m_descriptorManager.createTexture2DSrvDescriptor(m_2D_srv, m_2DTexture.Get(), desc);
         }
         {
             D3D12_UNORDERED_ACCESS_VIEW_DESC desc = {};
             desc.Format = format;
             desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-            m_2D_uav = m_descriptorManager.allocateTexture2DUavDescriptor(m_2DTexture.Get(), desc);
+            m_2D_uav = m_descriptorManager.allocateResourceDescriptor();
+            m_descriptorManager.createTexture2DUavDescriptor(m_2D_uav, m_2DTexture.Get(), desc);
         }
     }
     {
@@ -126,14 +128,16 @@ Sample::Sample(Renderer& renderer)
             desc.Format = format;
             desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
             desc.Texture3D.MipLevels = 1;
-            m_3D_srv = m_descriptorManager.allocateTexture3DSrvDescriptor(m_3DTexture.Get(), desc);
+            m_3D_srv = m_descriptorManager.allocateResourceDescriptor();
+            m_descriptorManager.createTexture3DSrvDescriptor(m_3D_srv, m_3DTexture.Get(), desc);
         }
         {
             D3D12_UNORDERED_ACCESS_VIEW_DESC desc = {};
             desc.Format = format;
             desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
             desc.Texture3D.WSize = -1;
-            m_3D_uav = m_descriptorManager.allocateTexture3DUavDescriptor(m_3DTexture.Get(), desc);
+            m_3D_uav = m_descriptorManager.allocateResourceDescriptor();
+            m_descriptorManager.createTexture3DUavDescriptor(m_3D_uav, m_3DTexture.Get(), desc);
         }
     }
     {
@@ -147,7 +151,8 @@ Sample::Sample(Renderer& renderer)
         samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
         samplerDesc.MinLOD = 0.0f;
         samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
-        m_sv = m_descriptorManager.allocateSamplerDescriptor(samplerDesc);
+        m_sv = m_descriptorManager.allocateSamplerDescriptor();
+        m_descriptorManager.createSamplerDescriptor(m_sv, samplerDesc);
     }
     {
         ThrowIfFailed(m_renderer.m_device->CreateCommittedResource(

@@ -9,12 +9,16 @@ class DescriptorManager
 {
 public:
     DescriptorManager(ID3D12Device* device);
-    unsigned int allocateTexture2DUavDescriptor(ID3D12Resource* texture, D3D12_UNORDERED_ACCESS_VIEW_DESC);
-    unsigned int allocateTexture2DSrvDescriptor(ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC);
-    unsigned int allocateTexture3DUavDescriptor(ID3D12Resource* texture, D3D12_UNORDERED_ACCESS_VIEW_DESC);
-    unsigned int allocateTexture3DSrvDescriptor(ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC);
-    unsigned int allocateSamplerDescriptor(D3D12_SAMPLER_DESC& desc);
-    unsigned int allocateCbvDescriptor(D3D12_CONSTANT_BUFFER_VIEW_DESC& desc);
+    unsigned int allocateResourceDescriptor();
+    unsigned int allocateSamplerDescriptor();
+    void deallocateResourceDescriptor(unsigned int);
+    void deallocateSamplerDescriptor(unsigned int);
+    void createTexture2DUavDescriptor(unsigned int handel, ID3D12Resource* texture, D3D12_UNORDERED_ACCESS_VIEW_DESC);
+    void createTexture2DSrvDescriptor(unsigned int handel, ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC);
+    void createTexture3DUavDescriptor(unsigned int handel, ID3D12Resource* texture, D3D12_UNORDERED_ACCESS_VIEW_DESC);
+    void createTexture3DSrvDescriptor(unsigned int handel, ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC);
+    void createSamplerDescriptor(unsigned int handel, D3D12_SAMPLER_DESC& desc);
+    void createCbvDescriptor(unsigned int handel, D3D12_CONSTANT_BUFFER_VIEW_DESC& desc);
     void setHeaps(ID3D12GraphicsCommandList* commandList);
 
     void setSignature(ID3D12GraphicsCommandList* commandList, bool bCompute);
