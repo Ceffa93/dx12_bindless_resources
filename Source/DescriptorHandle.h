@@ -1,3 +1,4 @@
+#pragma once
 #include <utility>
 #include "../Shared/Bindless.h"
 
@@ -5,15 +6,14 @@ template <class Name>
 class DescriptorHandle
 {
 public:
-    explicit DescriptorHandle(unsigned int v = 0)
-        : type(v) 
+    explicit DescriptorHandle(unsigned int handle = 0)
+        : m_handle(handle) 
     {}
 
-    operator unsigned int () { return type; }
-    unsigned int get() { return type; }
+    unsigned int get() { return m_handle; }
 
 private:
-    unsigned int type;
+    unsigned int m_handle;
     unsigned int _pad_to_match_hlsl_alignment[3];
 };
 

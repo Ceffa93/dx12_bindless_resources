@@ -1,5 +1,6 @@
 #pragma once
 #include "DescriptorManager.h"
+#include "DescriptorOwner.h"
 #include <External/d3dx12.h>
 #include <DirectXMath.h>
 #include <d3d12.h>
@@ -30,5 +31,10 @@ private:
     ComPtr<ID3D12Resource> m_2DTexture;
     ComPtr<ID3D12Resource> m_3DTexture;
     ComPtr<ID3D12Resource> m_buffer;
-    unsigned int m_2D_srv, m_2D_uav, m_3D_srv, m_3D_uav, m_sv;
+
+    ResourceDescriptorOwner<DescriptorHandle_Texture2D> m_2D_srv;
+    ResourceDescriptorOwner<DescriptorHandle_RWTexture2D_float4> m_2D_uav;
+    ResourceDescriptorOwner<DescriptorHandle_Texture3D> m_3D_srv;
+    ResourceDescriptorOwner<DescriptorHandle_RWTexture3D_float4> m_3D_uav;
+    SamplerDescriptorOwner<DescriptorHandle_SamplerState> m_sv;
 };

@@ -129,6 +129,7 @@
     <ClInclude Include="Shared\Flags.h" />
     <ClInclude Include="Shared\Bindless.h" />
     <ClInclude Include="Source\DescriptorHandle.h" />
+    <ClInclude Include="Source\DescriptorOwner.h" />
     <ClInclude Include="Source\Renderer.h" />
     <ClInclude Include="Source\DescriptorManager.h" />
     <ClInclude Include="Source\Sample.h" />

@@ -60,6 +60,11 @@ Sample::Sample(Renderer& renderer)
     , m_descriptorManager(m_renderer.m_device.Get())
     , m_graphicPipelineState(CreateGraphicPipelineState(m_renderer.m_device.Get(), m_renderer.m_assetPath, m_descriptorManager))
     , m_computePipelineState(CreateComputePipelineState(m_renderer.m_device.Get(), m_renderer.m_assetPath, m_descriptorManager))
+    , m_2D_srv(m_descriptorManager)
+    , m_2D_uav(m_descriptorManager)
+    , m_3D_srv(m_descriptorManager)
+    , m_3D_uav(m_descriptorManager)
+    , m_sv(m_descriptorManager)
 {
     {
         auto format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -89,15 +94,13 @@ Sample::Sample(Renderer& renderer)
             desc.Format = format;
             desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
             desc.Texture2D.MipLevels = 1;
-            m_2D_srv = m_descriptorManager.allocateResourceDescriptor();
-            m_descriptorManager.createTexture2DSrvDescriptor(m_2D_srv, m_2DTexture.Get(), desc);
+            m_descriptorManager.createTexture2DSrvDescriptor(m_2D_srv.get().get(), m_2DTexture.Get(), desc);
         }
         {
             D3D12_UNORDERED_ACCESS_VIEW_DESC desc = {};
             desc.Format = format;
             desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-            m_2D_uav = m_descriptorManager.allocateResourceDescriptor();
-            m_descriptorManager.createTexture2DUavDescriptor(m_2D_uav, m_2DTexture.Get(), desc);
+            m_descriptorManager.createTexture2DUavDescriptor(m_2D_uav.get().get(), m_2DTexture.Get(), desc);
         }
     }
     {
@@ -128,16 +131,14 @@ Sample::Sample(Renderer& renderer)
             desc.Format = format;
             desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
             desc.Texture3D.MipLevels = 1;
-            m_3D_srv = m_descriptorManager.allocateResourceDescriptor();
-            m_descriptorManager.createTexture3DSrvDescriptor(m_3D_srv, m_3DTexture.Get(), desc);
+            m_descriptorManager.createTexture3DSrvDescriptor(m_3D_srv.get().get(), m_3DTexture.Get(), desc);
         }
         {
             D3D12_UNORDERED_ACCESS_VIEW_DESC desc = {};
             desc.Format = format;
             desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
             desc.Texture3D.WSize = -1;
-            m_3D_uav = m_descriptorManager.allocateResourceDescriptor();
-            m_descriptorManager.createTexture3DUavDescriptor(m_3D_uav, m_3DTexture.Get(), desc);
+            m_descriptorManager.createTexture3DUavDescriptor(m_3D_uav.get().get(), m_3DTexture.Get(), desc);
         }
     }
     {
@@ -151,8 +152,7 @@ Sample::Sample(Renderer& renderer)
         samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
         samplerDesc.MinLOD = 0.0f;
         samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
-        m_sv = m_descriptorManager.allocateSamplerDescriptor();
-        m_descriptorManager.createSamplerDescriptor(m_sv, samplerDesc);
+        m_descriptorManager.createSamplerDescriptor(m_sv.get().get(), samplerDesc);
     }
     {
         ThrowIfFailed(m_renderer.m_device->CreateCommittedResource(
@@ -167,11 +167,11 @@ Sample::Sample(Renderer& renderer)
     {
         CD3DX12_RANGE readRange(0, 0);
         Flags flags;
-        flags.srv2D = DescriptorHandle_Texture2D{ m_2D_srv };
-        flags.uav2D = DescriptorHandle_RWTexture2D_float4{ m_2D_uav };
-        flags.srv3D = DescriptorHandle_Texture3D{ m_3D_srv };
-        flags.uav3D = DescriptorHandle_RWTexture3D_float4{ m_3D_uav };
-        flags.sampler = DescriptorHandle_SamplerState{ m_sv };
+        flags.srv2D = m_2D_srv.get();
+        flags.uav2D = m_2D_uav.get();
+        flags.srv3D = m_3D_srv.get();
+        flags.uav3D = m_3D_uav.get();
+        flags.sampler = m_sv.get();
 
         constexpr int t = sizeof(flags);
 
