@@ -124,10 +124,11 @@
   <ItemGroup>
     <ClInclude Include="External\d3dx12.h" />
     <ClInclude Include="External\DXSampleHelper.h" />
-    <ClInclude Include="Shaders\bindless.h" />
+    <ClInclude Include="Shaders\Bindless.h" />
     <ClInclude Include="Shared\DescriptorList.h" />
     <ClInclude Include="Shared\Flags.h" />
-    <ClInclude Include="Shared\Shared.h" />
+    <ClInclude Include="Shared\Bindless.h" />
+    <ClInclude Include="Source\Bindless.h" />
     <ClInclude Include="Source\DescriptorHandle.h" />
     <ClInclude Include="Source\Renderer.h" />
     <ClInclude Include="Source\DescriptorManager.h" />

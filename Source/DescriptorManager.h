@@ -1,7 +1,7 @@
 #pragma once
 #include <wrl.h>
 #include <d3d12.h>
-#include <Shared/Shared.h>
+#include "Bindless.h"
 
 using Microsoft::WRL::ComPtr;
 

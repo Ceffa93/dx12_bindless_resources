@@ -50,7 +50,7 @@
     <ClInclude Include="Shared\Flags.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="Shared\Shared.h">
+    <ClInclude Include="Shared\Bindless.h">
       <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="Source\DescriptorHandle.h">
@@ -59,8 +59,11 @@
     <ClInclude Include="Shared\DescriptorList.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="Shaders\bindless.h">
+    <ClInclude Include="Shaders\Bindless.h">
       <Filter>Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Bindless.h">
+      <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
