@@ -1,7 +1,7 @@
 #include "DescriptorManager.h"
 #include <External/DXSampleHelper.h>
 #include <External/d3dx12.h>
-
+#include <array>
 
 DescriptorManager::DescriptorManager(ID3D12Device* device)
 {
@@ -46,24 +46,14 @@ DescriptorManager::DescriptorManager(ID3D12Device* device)
             featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
         }
 
-        std::vector<CD3DX12_DESCRIPTOR_RANGE1> resourcesRanges, samplerRanges;
+        std::array<CD3DX12_DESCRIPTOR_RANGE1, 4> resourcesRanges{
+            CD3DX12_DESCRIPTOR_RANGE1{D3D12_DESCRIPTOR_RANGE_TYPE_UAV, UINT_MAX, 0, 1, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, 0},
+            CD3DX12_DESCRIPTOR_RANGE1{D3D12_DESCRIPTOR_RANGE_TYPE_UAV, UINT_MAX, 0, 2, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, 0},
+            CD3DX12_DESCRIPTOR_RANGE1{D3D12_DESCRIPTOR_RANGE_TYPE_SRV, UINT_MAX, 0, 1, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, 0},
+            CD3DX12_DESCRIPTOR_RANGE1{D3D12_DESCRIPTOR_RANGE_TYPE_SRV, UINT_MAX, 0, 2, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, 0},
+        };
 
-#pragma region(Descriptor Handle Named Type Definition)
-
-        #define ADD_DESCRIPTOR_RANGE(RangeVector, Category, Space) \
-            RangeVector.emplace_back(D3D12_DESCRIPTOR_RANGE_TYPE_##Category, -1, 0, Space, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, 0);
-
-        #define TYPED_DESCRIPTOR(Category, Space, ObjectType, FormatType)   ADD_DESCRIPTOR_RANGE(resourcesRanges, Category, Space)
-        #define UNTYPED_DESCRIPTOR(Category, Space, ObjectType)             ADD_DESCRIPTOR_RANGE(resourcesRanges, Category, Space)
-        #define SAMPLER_DESCRIPTOR(Space, ObjectType)                       ADD_DESCRIPTOR_RANGE(samplerRanges, SAMPLER, Space)
-        #include "../Shared/DescriptorList.h"
-        #undef TYPED_DESCRIPTOR
-        #undef UNTYPED_DESCRIPTOR
-        #undef SAMPLER_DESCRIPTOR
-
-        #undef ADD_DESCRIPTOR_RANGE
-
-#pragma endregion
+        CD3DX12_DESCRIPTOR_RANGE1 samplerRange{D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, UINT_MAX, 0, 1, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, 0};
 
         CD3DX12_ROOT_PARAMETER1 rootParameters[16];
         for (UINT i = 0; i < 14; i++)
@@ -71,7 +61,7 @@ DescriptorManager::DescriptorManager(ID3D12Device* device)
             rootParameters[i].InitAsConstantBufferView(i, 0u, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_ALL);
         }
         rootParameters[14].InitAsDescriptorTable(static_cast<int>(resourcesRanges.size()), resourcesRanges.data());
-        rootParameters[15].InitAsDescriptorTable(static_cast<int>(samplerRanges.size()), samplerRanges.data());
+        rootParameters[15].InitAsDescriptorTable(1, &samplerRange);
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
         rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);

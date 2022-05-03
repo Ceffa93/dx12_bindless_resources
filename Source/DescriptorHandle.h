@@ -1,6 +1,4 @@
 #pragma once
-#include <utility>
-#include "../Shared/Bindless.h"
 
 template <class Name>
 class DescriptorHandle
@@ -17,20 +15,8 @@ private:
     unsigned int _pad_to_match_hlsl_alignment[3];
 };
 
-
-#pragma region(Descriptor Handle Named Type Definition)
-
-#define DEFINE_DESCRIPTOR_HANDLE(NameSuffix) \
-    using DESCRIPTOR_HANDLE_NAME(NameSuffix) = DescriptorHandle<struct DESCRIPTOR_HANDLE_NAME(NameSuffix)##_Tag>
-
-#define TYPED_DESCRIPTOR(Category, Space, ObjectType, FormatType)   DEFINE_DESCRIPTOR_HANDLE(ObjectType##_##FormatType)
-#define UNTYPED_DESCRIPTOR(Category, Space, ObjectType)             DEFINE_DESCRIPTOR_HANDLE(ObjectType)
-#define SAMPLER_DESCRIPTOR(Space, ObjectType)                       DEFINE_DESCRIPTOR_HANDLE(ObjectType)
-#include "../Shared/DescriptorList.h"
-#undef TYPED_DESCRIPTOR
-#undef UNTYPED_DESCRIPTOR
-#undef SAMPLER_DESCRIPTOR
-
-#undef DEFINE_DESCRIPTOR_HANDLE
-
-#pragma endregion
+using DescriptorHandle_RWTexture2D_float4 = DescriptorHandle<struct _DescriptorHandle_RWTexture2D_float4>;
+using DescriptorHandle_RWTexture3D_float4 = DescriptorHandle<struct _DescriptorHandle_RWTexture3D_float4>;
+using DescriptorHandle_Texture2D = DescriptorHandle<struct _DescriptorHandle_Texture2D>;
+using DescriptorHandle_Texture3D = DescriptorHandle<struct _DescriptorHandle_Texture3D>;
+using DescriptorHandle_SamplerState = DescriptorHandle<struct _DescriptorHandle_SamplerState>;
