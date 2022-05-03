@@ -53,13 +53,10 @@
     <ClInclude Include="Shared\Bindless.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="Source\DescriptorHandle.h">
-      <Filter>Source</Filter>
-    </ClInclude>
     <ClInclude Include="Shaders\Bindless.h">
       <Filter>Shaders</Filter>
     </ClInclude>
-    <ClInclude Include="Source\DescriptorOwner.h">
+    <ClInclude Include="Source\Descriptor.h">
       <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>

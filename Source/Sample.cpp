@@ -89,18 +89,13 @@ Sample::Sample(Renderer& renderer)
                 IID_PPV_ARGS(&m_2DTexture)));
         }
         {
-            D3D12_SHADER_RESOURCE_VIEW_DESC desc = {};
-            desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-            desc.Format = format;
-            desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-            desc.Texture2D.MipLevels = 1;
-            m_descriptorManager.createTexture2DSrvDescriptor(m_2D_srv.get().get(), m_2DTexture.Get(), desc);
+            D3D12_TEX2D_SRV desc{};
+            desc.MipLevels = 1;
+            m_2D_srv.create(m_2DTexture.Get(), format, D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING, desc);
         }
         {
-            D3D12_UNORDERED_ACCESS_VIEW_DESC desc = {};
-            desc.Format = format;
-            desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-            m_descriptorManager.createTexture2DUavDescriptor(m_2D_uav.get().get(), m_2DTexture.Get(), desc);
+            D3D12_TEX2D_UAV desc{};
+            m_2D_uav.create(m_2DTexture.Get(), format, desc);
         }
     }
     {
@@ -126,19 +121,14 @@ Sample::Sample(Renderer& renderer)
                 IID_PPV_ARGS(&m_3DTexture)));
         }
         {
-            D3D12_SHADER_RESOURCE_VIEW_DESC desc = {};
-            desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-            desc.Format = format;
-            desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
-            desc.Texture3D.MipLevels = 1;
-            m_descriptorManager.createTexture3DSrvDescriptor(m_3D_srv.get().get(), m_3DTexture.Get(), desc);
+            D3D12_TEX3D_SRV desc{};
+            desc.MipLevels = 1;
+            m_3D_srv.create(m_3DTexture.Get(), format, D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING, desc);
         }
         {
-            D3D12_UNORDERED_ACCESS_VIEW_DESC desc = {};
-            desc.Format = format;
-            desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
-            desc.Texture3D.WSize = -1;
-            m_descriptorManager.createTexture3DUavDescriptor(m_3D_uav.get().get(), m_3DTexture.Get(), desc);
+            D3D12_TEX3D_UAV desc{};
+            desc.WSize = -1;
+            m_3D_uav.create(m_3DTexture.Get(), format, desc);
         }
     }
     {

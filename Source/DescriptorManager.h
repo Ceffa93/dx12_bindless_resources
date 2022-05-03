@@ -1,7 +1,6 @@
 #pragma once
 #include <wrl.h>
 #include <d3d12.h>
-#include "DescriptorHandle.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -13,10 +12,10 @@ public:
     unsigned int allocateSamplerDescriptor();
     void deallocateResourceDescriptor(unsigned int);
     void deallocateSamplerDescriptor(unsigned int);
-    void createTexture2DUavDescriptor(unsigned int handle, ID3D12Resource* texture, D3D12_UNORDERED_ACCESS_VIEW_DESC);
-    void createTexture2DSrvDescriptor(unsigned int handle, ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC);
-    void createTexture3DUavDescriptor(unsigned int handle, ID3D12Resource* texture, D3D12_UNORDERED_ACCESS_VIEW_DESC);
-    void createTexture3DSrvDescriptor(unsigned int handle, ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC);
+    void createTexture2DUavDescriptor(unsigned int handle, ID3D12Resource*, DXGI_FORMAT, D3D12_TEX2D_UAV);
+    void createTexture2DSrvDescriptor(unsigned int handle, ID3D12Resource*, DXGI_FORMAT, UINT mapping, D3D12_TEX2D_SRV);
+    void createTexture3DUavDescriptor(unsigned int handle, ID3D12Resource*, DXGI_FORMAT, D3D12_TEX3D_UAV);
+    void createTexture3DSrvDescriptor(unsigned int handle, ID3D12Resource*, DXGI_FORMAT, UINT mapping, D3D12_TEX3D_SRV);
     void createSamplerDescriptor(unsigned int handle, D3D12_SAMPLER_DESC& desc);
     void createCbvDescriptor(unsigned int handle, D3D12_CONSTANT_BUFFER_VIEW_DESC& desc);
     void setHeaps(ID3D12GraphicsCommandList* commandList);
