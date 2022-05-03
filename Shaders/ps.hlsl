@@ -6,13 +6,8 @@ struct PSInput
 	float2 uv 			: TEXCOORD;
 };
 
-#define AA() 1
-#define B(c) A##c()
-
-
 float4 PSMain(PSInput input) : SV_TARGET
 {
-	int cc = B(A);
 	bool left = input.uv.x < .5;
 
 	float2 uv = float2(frac(input.uv.x * 2), input.uv.y);
