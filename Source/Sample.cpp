@@ -142,7 +142,7 @@ Sample::Sample(Renderer& renderer)
         samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
         samplerDesc.MinLOD = 0.0f;
         samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
-        m_descriptorManager.createSamplerDescriptor(m_sv.get().get(), samplerDesc);
+        m_sv.create(samplerDesc);
     }
     {
         ThrowIfFailed(m_renderer.m_device->CreateCommittedResource(

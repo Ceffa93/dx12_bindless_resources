@@ -75,6 +75,7 @@ public:
     ~Descriptor_SamplerState() { m_manager.deallocateSamplerDescriptor(m_handle.get()); }
     using Handle = DescriptorHandle<Descriptor_SamplerState>;
     Handle get() { return m_handle; }
+    void create(D3D12_SAMPLER_DESC desc) { m_manager.createSamplerDescriptor(m_handle.get(), desc); }
 private:
     Handle m_handle;
 };
