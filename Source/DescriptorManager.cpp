@@ -75,18 +75,14 @@ DescriptorManager::DescriptorManager(ID3D12Device* device)
 
 unsigned DescriptorManager::allocateResourceDescriptor()
 {
-    // TODO: don't need cpu handle
-    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
     unsigned int handle;
-    m_resourceHeap.allocate(cpuHandle, handle);
+    m_resourceHeap.allocate(handle);
     return handle;
 }
 unsigned DescriptorManager::allocateSamplerDescriptor()
 {
-    // TODO: don't need cpu handle
-    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
     unsigned int handle;
-    m_samplerHeap.allocate(cpuHandle, handle);
+    m_samplerHeap.allocate(handle);
     return handle;
 }
 void DescriptorManager::deallocateResourceDescriptor(unsigned int)
@@ -105,8 +101,7 @@ void DescriptorManager::createTexture2DUavDescriptor(unsigned int handle, ID3D12
     desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
     desc.Texture2D = resDesc;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ m_resourceHeap.cpuStart + handle * m_resourceHeap.descriptorSize };
-    m_device->CreateUnorderedAccessView(texture, nullptr, &desc, cpuHandle);
+    m_device->CreateUnorderedAccessView(texture, nullptr, &desc, m_resourceHeap.getCpuHandle(handle));
 }
 void DescriptorManager::createTexture2DSrvDescriptor(unsigned int handle, ID3D12Resource* texture, DXGI_FORMAT format, UINT mapping, D3D12_TEX2D_SRV resDesc)
 {
@@ -116,8 +111,7 @@ void DescriptorManager::createTexture2DSrvDescriptor(unsigned int handle, ID3D12
     desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     desc.Texture2D = resDesc;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ m_resourceHeap.cpuStart + handle * m_resourceHeap.descriptorSize };
-    m_device->CreateShaderResourceView(texture, &desc, cpuHandle);
+    m_device->CreateShaderResourceView(texture, &desc, m_resourceHeap.getCpuHandle(handle));
 }
 void DescriptorManager::createTexture3DUavDescriptor(unsigned int handle, ID3D12Resource* texture, DXGI_FORMAT format, D3D12_TEX3D_UAV resDesc)
 {
@@ -126,8 +120,7 @@ void DescriptorManager::createTexture3DUavDescriptor(unsigned int handle, ID3D12
     desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
     desc.Texture3D = resDesc;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ m_resourceHeap.cpuStart + handle * m_resourceHeap.descriptorSize };
-    m_device->CreateUnorderedAccessView(texture, nullptr, &desc, cpuHandle);
+    m_device->CreateUnorderedAccessView(texture, nullptr, &desc, m_resourceHeap.getCpuHandle(handle));
 }
 void DescriptorManager::createTexture3DSrvDescriptor(unsigned int handle, ID3D12Resource* texture, DXGI_FORMAT format, UINT mapping, D3D12_TEX3D_SRV resDesc)
 {
@@ -137,20 +130,12 @@ void DescriptorManager::createTexture3DSrvDescriptor(unsigned int handle, ID3D12
     desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
     desc.Texture3D = resDesc;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ m_resourceHeap.cpuStart + handle * m_resourceHeap.descriptorSize };
-    m_device->CreateShaderResourceView(texture, &desc, cpuHandle);
+    m_device->CreateShaderResourceView(texture, &desc, m_resourceHeap.getCpuHandle(handle));
 }
 
 void DescriptorManager::createSamplerDescriptor(unsigned int handle, D3D12_SAMPLER_DESC& desc)
 {
-    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ m_samplerHeap.cpuStart + handle * m_samplerHeap.descriptorSize };
-    m_device->CreateSampler(&desc, cpuHandle);
-}
-
-void DescriptorManager::createCbvDescriptor(unsigned int handle, D3D12_CONSTANT_BUFFER_VIEW_DESC& desc)
-{
-    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ m_resourceHeap.cpuStart + handle * m_resourceHeap.descriptorSize };
-    m_device->CreateConstantBufferView(&desc, cpuHandle);
+    m_device->CreateSampler(&desc, m_samplerHeap.getCpuHandle(handle));
 }
 
 void DescriptorManager::setHeaps(ID3D12GraphicsCommandList* commandList)
