@@ -3,36 +3,25 @@
 #include <External/d3dx12.h>
 #include <array>
 
+DescriptorManager::Heap::Heap(ID3D12Device* device, unsigned int descriptorNum, D3D12_DESCRIPTOR_HEAP_TYPE heapType)
+{
+    D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+    heapDesc.NumDescriptors = descriptorNum;
+    heapDesc.Type = heapType;
+    heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    ThrowIfFailed(device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap)));
+
+    cpuStart = heap->GetCPUDescriptorHandleForHeapStart().ptr;
+    gpuStart = heap->GetGPUDescriptorHandleForHeapStart().ptr;
+    descriptorSize = device->GetDescriptorHandleIncrementSize(heapType);
+    lastAllocated = 0;
+}
+
 DescriptorManager::DescriptorManager(ID3D12Device* device)
+    : m_resourceHeap(device, 2048, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)
+    , m_samplerHeap(device, 16, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER)
 {
     m_device = device;
-	
-	// Create heaps
-    {
-        D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-        heapDesc.NumDescriptors = 8;
-        heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        ThrowIfFailed(m_device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_resourceHeap.heap)));
-
-        m_resourceHeap.cpuStart = m_resourceHeap.heap->GetCPUDescriptorHandleForHeapStart().ptr;
-        m_resourceHeap.gpuStart = m_resourceHeap.heap->GetGPUDescriptorHandleForHeapStart().ptr;
-        m_resourceHeap.descriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        m_resourceHeap.lastAllocated = 0;
-    }
-	{
-        D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-        heapDesc.NumDescriptors = 1;
-        heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-        heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        ThrowIfFailed(m_device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_samplerHeap.heap)));
-
-        m_samplerHeap.cpuStart = m_samplerHeap.heap->GetCPUDescriptorHandleForHeapStart().ptr;
-        m_samplerHeap.gpuStart = m_samplerHeap.heap->GetGPUDescriptorHandleForHeapStart().ptr;
-        m_samplerHeap.descriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-        m_samplerHeap.lastAllocated = 0;
-	}
-
 	
 	// Create the root signature.
     {
@@ -75,16 +64,13 @@ DescriptorManager::DescriptorManager(ID3D12Device* device)
 
 unsigned DescriptorManager::allocateResourceDescriptor()
 {
-    unsigned int handle;
-    m_resourceHeap.allocate(handle);
-    return handle;
+    return m_resourceHeap.allocate();
 }
 unsigned DescriptorManager::allocateSamplerDescriptor()
 {
-    unsigned int handle;
-    m_samplerHeap.allocate(handle);
-    return handle;
+    return m_samplerHeap.allocate();
 }
+
 void DescriptorManager::deallocateResourceDescriptor(unsigned int)
 {
     // TODO: stack allocator does not support deallocate

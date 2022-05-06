@@ -31,22 +31,17 @@ private:
 	
 	struct Heap
 	{
+        Heap(ID3D12Device* device, unsigned int descriptorNum, D3D12_DESCRIPTOR_HEAP_TYPE heapType);
+
         ComPtr<ID3D12DescriptorHeap> heap;
         SIZE_T descriptorSize;
         SIZE_T cpuStart;
         SIZE_T lastAllocated;
         SIZE_T gpuStart;
 
-        D3D12_CPU_DESCRIPTOR_HANDLE getCpuHandle(unsigned int handle)
-        {
-            return { cpuStart + handle * descriptorSize };
-        }
+        D3D12_CPU_DESCRIPTOR_HANDLE getCpuHandle(unsigned int handle) { return { cpuStart + handle * descriptorSize }; }
 
-        void allocate(unsigned int& handle)
-        {
-            handle = unsigned int(lastAllocated);
-            lastAllocated++;
-        }
+        unsigned int allocate() { return unsigned int(lastAllocated++); }
 
 	} m_resourceHeap, m_samplerHeap;
 
