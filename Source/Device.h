@@ -4,10 +4,10 @@
 
 using Microsoft::WRL::ComPtr;
 
-class DescriptorManager
+class Device
 {
 public:
-    DescriptorManager(ID3D12Device* device);
+    Device(ID3D12Device* device);
     unsigned int allocateResourceDescriptor();
     unsigned int allocateSamplerDescriptor();
     void deallocateResourceDescriptor(unsigned int);

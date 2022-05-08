@@ -117,7 +117,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\Renderer.cpp" />
-    <ClCompile Include="Source\DescriptorManager.cpp" />
+    <ClCompile Include="Source\Device.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\Sample.cpp" />
   </ItemGroup>
@@ -129,7 +129,7 @@
     <ClInclude Include="Shared\Bindless.h" />
     <ClInclude Include="Source\Descriptor.h" />
     <ClInclude Include="Source\Renderer.h" />
-    <ClInclude Include="Source\DescriptorManager.h" />
+    <ClInclude Include="Source\Device.h" />
     <ClInclude Include="Source\Sample.h" />
   </ItemGroup>
   <ItemGroup>

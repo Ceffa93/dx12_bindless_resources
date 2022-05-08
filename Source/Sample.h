@@ -1,5 +1,5 @@
 #pragma once
-#include "DescriptorManager.h"
+#include "Device.h"
 #include "Descriptor.h"
 #include <External/d3dx12.h>
 #include <DirectXMath.h>
@@ -25,7 +25,7 @@ private:
 
     Renderer& m_renderer;
 
-    DescriptorManager m_descriptorManager;
+    Device m_device;
     ComPtr<ID3D12PipelineState> m_graphicPipelineState;
     ComPtr<ID3D12PipelineState> m_computePipelineState;
     ComPtr<ID3D12Resource> m_2DTexture;

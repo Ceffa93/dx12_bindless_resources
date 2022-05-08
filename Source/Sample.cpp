@@ -1,4 +1,4 @@
-#include "Sample.h"
+﻿#include "Sample.h"
 #include "Renderer.h"
 #include <Shared/Flags.h>
 #include <External/DXSampleHelper.h>
@@ -6,7 +6,7 @@
 
 namespace
 {
-    ComPtr<ID3D12PipelineState> CreateComputePipelineState(ID3D12Device* device, const std::wstring& assetPath, DescriptorManager& descriptorManager)
+    ComPtr<ID3D12PipelineState> CreateComputePipelineState(ID3D12Device* device, const std::wstring& assetPath, Device& descriptorManager)
     {
         UINT8* shaderData;
         UINT shaderDataLength;
@@ -22,7 +22,7 @@ namespace
         return pipelineState;
     }
 
-    ComPtr<ID3D12PipelineState> CreateGraphicPipelineState(ID3D12Device* device, const std::wstring& assetPath, DescriptorManager& descriptorManager)
+    ComPtr<ID3D12PipelineState> CreateGraphicPipelineState(ID3D12Device* device, const std::wstring& assetPath, Device& descriptorManager)
     {
         UINT8* pVertexShaderData;
         UINT8* pPixelShaderData;
@@ -57,14 +57,14 @@ namespace
 
 Sample::Sample(Renderer& renderer)
     : m_renderer(renderer)
-    , m_descriptorManager(m_renderer.m_device.Get())
-    , m_graphicPipelineState(CreateGraphicPipelineState(m_renderer.m_device.Get(), m_renderer.m_assetPath, m_descriptorManager))
-    , m_computePipelineState(CreateComputePipelineState(m_renderer.m_device.Get(), m_renderer.m_assetPath, m_descriptorManager))
-    , m_2D_srv(m_descriptorManager)
-    , m_2D_uav(m_descriptorManager)
-    , m_3D_srv(m_descriptorManager)
-    , m_3D_uav(m_descriptorManager)
-    , m_sv(m_descriptorManager)
+    , m_device(m_renderer.m_device.Get())
+    , m_graphicPipelineState(CreateGraphicPipelineState(m_renderer.m_device.Get(), m_renderer.m_assetPath, m_device))
+    , m_computePipelineState(CreateComputePipelineState(m_renderer.m_device.Get(), m_renderer.m_assetPath, m_device))
+    , m_2D_srv(m_device)
+    , m_2D_uav(m_device)
+    , m_3D_srv(m_device)
+    , m_3D_uav(m_device)
+    , m_sv(m_device)
 {
     {
         auto format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -91,11 +91,11 @@ Sample::Sample(Renderer& renderer)
         {
             D3D12_TEX2D_SRV desc{};
             desc.MipLevels = 1;
-            m_2D_srv.create(m_2DTexture.Get(), format, D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING, desc);
+            m_2D_srv.set(m_2DTexture.Get(), format, D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING, desc);
         }
         {
             D3D12_TEX2D_UAV desc{};
-            m_2D_uav.create(m_2DTexture.Get(), format, desc);
+            m_2D_uav.set(m_2DTexture.Get(), format, desc);
         }
     }
     {
@@ -123,12 +123,12 @@ Sample::Sample(Renderer& renderer)
         {
             D3D12_TEX3D_SRV desc{};
             desc.MipLevels = 1;
-            m_3D_srv.create(m_3DTexture.Get(), format, D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING, desc);
+            m_3D_srv.set(m_3DTexture.Get(), format, D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING, desc);
         }
         {
             D3D12_TEX3D_UAV desc{};
             desc.WSize = -1;
-            m_3D_uav.create(m_3DTexture.Get(), format, desc);
+            m_3D_uav.set(m_3DTexture.Get(), format, desc);
         }
     }
     {
@@ -142,7 +142,7 @@ Sample::Sample(Renderer& renderer)
         samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
         samplerDesc.MinLOD = 0.0f;
         samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
-        m_sv.create(samplerDesc);
+        m_sv.set(samplerDesc);
     }
     {
         ThrowIfFailed(m_renderer.m_device->CreateCommittedResource(
@@ -178,13 +178,13 @@ void Sample::OnUpdate()
 
 void Sample::OnRender(ID3D12GraphicsCommandList* commandList)
 {
-    m_descriptorManager.setHeaps(commandList);
+    m_device.setHeaps(commandList);
 
     {
         commandList->SetPipelineState(m_computePipelineState.Get());
-        m_descriptorManager.setSignature(commandList, true);
-        m_descriptorManager.setTables(commandList, true);
-        m_descriptorManager.setRootCbv(commandList, 0, m_buffer.Get(), true);
+        m_device.setSignature(commandList, true);
+        m_device.setTables(commandList, true);
+        m_device.setRootCbv(commandList, 0, m_buffer.Get(), true);
         commandList->Dispatch(1, 1, 1);
     }
 
@@ -193,9 +193,9 @@ void Sample::OnRender(ID3D12GraphicsCommandList* commandList)
 
     {
         commandList->SetPipelineState(m_graphicPipelineState.Get());
-        m_descriptorManager.setSignature(commandList, false);
-        m_descriptorManager.setTables(commandList, false);
-        m_descriptorManager.setRootCbv(commandList, 0, m_buffer.Get(), false);
+        m_device.setSignature(commandList, false);
+        m_device.setTables(commandList, false);
+        m_device.setRootCbv(commandList, 0, m_buffer.Get(), false);
 
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         commandList->DrawInstanced(3, 1, 0, 0);

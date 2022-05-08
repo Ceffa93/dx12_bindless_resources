@@ -1,9 +1,9 @@
-#include "DescriptorManager.h"
+#include "Device.h"
 #include <External/DXSampleHelper.h>
 #include <External/d3dx12.h>
 #include <array>
 
-DescriptorManager::Heap::Heap(ID3D12Device* device, unsigned int descriptorNum, D3D12_DESCRIPTOR_HEAP_TYPE heapType)
+Device::Heap::Heap(ID3D12Device* device, unsigned int descriptorNum, D3D12_DESCRIPTOR_HEAP_TYPE heapType)
 {
     D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
     heapDesc.NumDescriptors = descriptorNum;
@@ -17,7 +17,7 @@ DescriptorManager::Heap::Heap(ID3D12Device* device, unsigned int descriptorNum, 
     lastAllocated = 0;
 }
 
-DescriptorManager::DescriptorManager(ID3D12Device* device)
+Device::Device(ID3D12Device* device)
     : m_resourceHeap(device, 2048, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)
     , m_samplerHeap(device, 16, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER)
 {
@@ -62,25 +62,25 @@ DescriptorManager::DescriptorManager(ID3D12Device* device)
     }
 }
 
-unsigned DescriptorManager::allocateResourceDescriptor()
+unsigned Device::allocateResourceDescriptor()
 {
     return m_resourceHeap.allocate();
 }
-unsigned DescriptorManager::allocateSamplerDescriptor()
+unsigned Device::allocateSamplerDescriptor()
 {
     return m_samplerHeap.allocate();
 }
 
-void DescriptorManager::deallocateResourceDescriptor(unsigned int)
+void Device::deallocateResourceDescriptor(unsigned int)
 {
     // TODO: stack allocator does not support deallocate
 }
-void DescriptorManager::deallocateSamplerDescriptor(unsigned int)
+void Device::deallocateSamplerDescriptor(unsigned int)
 {
     // TODO: stack allocator does not support deallocate
 }
 
-void DescriptorManager::createTexture2DUavDescriptor(unsigned int handle, ID3D12Resource* texture, DXGI_FORMAT format, D3D12_TEX2D_UAV resDesc)
+void Device::createTexture2DUavDescriptor(unsigned int handle, ID3D12Resource* texture, DXGI_FORMAT format, D3D12_TEX2D_UAV resDesc)
 {
     D3D12_UNORDERED_ACCESS_VIEW_DESC desc = {};
     desc.Format = format;
@@ -89,7 +89,7 @@ void DescriptorManager::createTexture2DUavDescriptor(unsigned int handle, ID3D12
 
     m_device->CreateUnorderedAccessView(texture, nullptr, &desc, m_resourceHeap.getCpuHandle(handle));
 }
-void DescriptorManager::createTexture2DSrvDescriptor(unsigned int handle, ID3D12Resource* texture, DXGI_FORMAT format, UINT mapping, D3D12_TEX2D_SRV resDesc)
+void Device::createTexture2DSrvDescriptor(unsigned int handle, ID3D12Resource* texture, DXGI_FORMAT format, UINT mapping, D3D12_TEX2D_SRV resDesc)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC desc = {};
     desc.Format = format;
@@ -99,7 +99,7 @@ void DescriptorManager::createTexture2DSrvDescriptor(unsigned int handle, ID3D12
 
     m_device->CreateShaderResourceView(texture, &desc, m_resourceHeap.getCpuHandle(handle));
 }
-void DescriptorManager::createTexture3DUavDescriptor(unsigned int handle, ID3D12Resource* texture, DXGI_FORMAT format, D3D12_TEX3D_UAV resDesc)
+void Device::createTexture3DUavDescriptor(unsigned int handle, ID3D12Resource* texture, DXGI_FORMAT format, D3D12_TEX3D_UAV resDesc)
 {
     D3D12_UNORDERED_ACCESS_VIEW_DESC desc = {};
     desc.Format = format;
@@ -108,7 +108,7 @@ void DescriptorManager::createTexture3DUavDescriptor(unsigned int handle, ID3D12
 
     m_device->CreateUnorderedAccessView(texture, nullptr, &desc, m_resourceHeap.getCpuHandle(handle));
 }
-void DescriptorManager::createTexture3DSrvDescriptor(unsigned int handle, ID3D12Resource* texture, DXGI_FORMAT format, UINT mapping, D3D12_TEX3D_SRV resDesc)
+void Device::createTexture3DSrvDescriptor(unsigned int handle, ID3D12Resource* texture, DXGI_FORMAT format, UINT mapping, D3D12_TEX3D_SRV resDesc)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC desc = {};
     desc.Format = format;
@@ -119,18 +119,18 @@ void DescriptorManager::createTexture3DSrvDescriptor(unsigned int handle, ID3D12
     m_device->CreateShaderResourceView(texture, &desc, m_resourceHeap.getCpuHandle(handle));
 }
 
-void DescriptorManager::createSamplerDescriptor(unsigned int handle, D3D12_SAMPLER_DESC& desc)
+void Device::createSamplerDescriptor(unsigned int handle, D3D12_SAMPLER_DESC& desc)
 {
     m_device->CreateSampler(&desc, m_samplerHeap.getCpuHandle(handle));
 }
 
-void DescriptorManager::setHeaps(ID3D12GraphicsCommandList* commandList)
+void Device::setHeaps(ID3D12GraphicsCommandList* commandList)
 {
     ID3D12DescriptorHeap* ppHeaps[] = { m_resourceHeap.heap.Get(), m_samplerHeap.heap.Get() };
     commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 }
 
-void DescriptorManager::setSignature(ID3D12GraphicsCommandList* commandList, bool bCompute)
+void Device::setSignature(ID3D12GraphicsCommandList* commandList, bool bCompute)
 {
     if (bCompute)
     {
@@ -142,7 +142,7 @@ void DescriptorManager::setSignature(ID3D12GraphicsCommandList* commandList, boo
     }
 }
 
-void DescriptorManager::setTables(ID3D12GraphicsCommandList* commandList, bool bCompute)
+void Device::setTables(ID3D12GraphicsCommandList* commandList, bool bCompute)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE resourceHandle, samplerHandle;
     resourceHandle.ptr = m_resourceHeap.gpuStart;
@@ -159,7 +159,7 @@ void DescriptorManager::setTables(ID3D12GraphicsCommandList* commandList, bool b
     }
 }
 
-void DescriptorManager::setRootCbv(ID3D12GraphicsCommandList* commandList, unsigned int idx, ID3D12Resource* buffer, bool bCompute)
+void Device::setRootCbv(ID3D12GraphicsCommandList* commandList, unsigned int idx, ID3D12Resource* buffer, bool bCompute)
 {
     auto addr = buffer->GetGPUVirtualAddress();
     if (bCompute)

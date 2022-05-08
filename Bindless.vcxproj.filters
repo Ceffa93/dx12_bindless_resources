@@ -18,7 +18,7 @@
     <ClCompile Include="Source\Renderer.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="Source\DescriptorManager.cpp">
+    <ClCompile Include="Source\Device.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="Source\Main.cpp">
@@ -32,7 +32,7 @@
     <ClInclude Include="Source\Renderer.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="Source\DescriptorManager.h">
+    <ClInclude Include="Source\Device.h">
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="Shaders\include.h">
